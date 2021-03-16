@@ -26,4 +26,8 @@ public class UsersManager {
     public User getUser(String username) {
         return this.users.get(username);
     }
+
+    public boolean containsUser(String username) {
+        return this.users.containsKey(username);
+    }
 }

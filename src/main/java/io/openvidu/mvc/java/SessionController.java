@@ -5,6 +5,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.http.HttpSession;
 
+import commons.User;
+import commons.UsersManager;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,6 +24,8 @@ import io.openvidu.java.client.Session;
 @Controller
 public class SessionController {
 
+    private final String ROOM_SESSION_NAME = "ROOM";
+
     // OpenVidu object as entrypoint of the SDK
     private OpenVidu openVidu;
 
@@ -36,87 +40,35 @@ public class SessionController {
     // Secret shared with our OpenVidu server
     private String SECRET;
 
+    private UsersManager usersManager;
+
     public SessionController(@Value("${openvidu.secret}") String secret, @Value("${openvidu.url}") String openviduUrl) {
         this.SECRET = secret;
         this.OPENVIDU_URL = openviduUrl;
         this.openVidu = new OpenVidu(OPENVIDU_URL, SECRET);
+        this.usersManager = UsersManager.getInstance();
     }
 
     @RequestMapping(value = "/session", method = RequestMethod.POST)
-    public String joinSession(@RequestBody String username, Model model, HttpSession httpSession) {
+    public void joinSession(@RequestBody String username, Model model, HttpSession httpSession) {
 
         String sessionName = "ROOM";
         if (httpSession.getAttribute("loggedUser") == null) {
             httpSession.setAttribute("loggedUser", username);
         }
         System.out.println("Getting sessionId and token | {sessionName}={" + sessionName + "}");
-
-        // Role associated to this user
-        OpenViduRole role = OpenViduRole.PUBLISHER;
-
-        // Optional data to be passed to other users when this user connects to the
-        // video-call. In this case, a JSON with the value we stored in the HttpSession
-        // object on login
+        this.addUserIfMissing(username);
         String serverData = "{\"serverData\": \"" + httpSession.getAttribute("loggedUser") + "\"}";
-
-        // Build connectionProperties object with the serverData and the role
         ConnectionProperties connectionProperties = new ConnectionProperties.Builder().type(ConnectionType.WEBRTC)
-                .role(role).data(serverData).build();
-
+                .role(OpenViduRole.PUBLISHER).data(serverData).build();
         if (this.mapSessions.get(sessionName) != null) {
             // Session already exists
             System.out.println("Existing session " + sessionName);
-            try {
-
-                // Generate a new token with the recently created connectionProperties
-                String token = this.mapSessions.get(sessionName).createConnection(connectionProperties).getToken();
-
-                // Update our collection storing the new token
-                this.mapSessionNamesTokens.get(sessionName).put(token, role);
-
-                // Add all the needed attributes to the template
-                model.addAttribute("sessionName", sessionName);
-                model.addAttribute("token", token);
-                model.addAttribute("nickName", username);
-                model.addAttribute("userName", httpSession.getAttribute("loggedUser"));
-
-                // Return session.html template
-                return "session";
-
-            } catch (Exception e) {
-                // If error just return dashboard.html template
-                model.addAttribute("username", httpSession.getAttribute("loggedUser"));
-                return "dashboard";
-            }
+            joinGameRoom(model, httpSession, username, connectionProperties);
         } else {
             // New session
             System.out.println("New session " + sessionName);
-            try {
-
-                // Create a new OpenVidu Session
-                Session session = this.openVidu.createSession();
-                // Generate a new token with the recently created connectionProperties
-                String token = session.createConnection(connectionProperties).getToken();
-
-                // Store the session and the token in our collections
-                this.mapSessions.put(sessionName, session);
-                this.mapSessionNamesTokens.put(sessionName, new ConcurrentHashMap<>());
-                this.mapSessionNamesTokens.get(sessionName).put(token, role);
-
-                // Add all the needed attributes to the template
-                model.addAttribute("sessionName", sessionName);
-                model.addAttribute("token", token);
-                model.addAttribute("nickName", username);
-                model.addAttribute("userName", httpSession.getAttribute("loggedUser"));
-
-                // Return session.html template
-                return "session";
-
-            } catch (Exception e) {
-                // If error just return dashboard.html template
-                model.addAttribute("username", httpSession.getAttribute("loggedUser"));
-                return "dashboard";
-            }
+            startNewGameRoom(model, httpSession, username, connectionProperties);
         }
     }
 
@@ -153,6 +105,55 @@ public class SessionController {
             // The SESSION does not exist
             System.out.println("Problems in the app server: the SESSION does not exist");
             return "redirect:/dashboard";
+        }
+    }
+
+    private void joinGameRoom(Model model, HttpSession httpSession, String username, ConnectionProperties connectionProperties) {
+        try {
+
+            // Generate a new token with the recently created connectionProperties
+            String token = this.mapSessions.get(ROOM_SESSION_NAME).createConnection(connectionProperties).getToken();
+
+            // Update our collection storing the new token
+            this.mapSessionNamesTokens.get(ROOM_SESSION_NAME).put(token, OpenViduRole.PUBLISHER);
+            this.setModelAttributes(model, httpSession, username, token);
+
+        } catch (Exception e) {
+            // If error just return dashboard.html template
+            model.addAttribute("username", httpSession.getAttribute("loggedUser"));
+        }
+    }
+
+    private void startNewGameRoom(Model model, HttpSession httpSession, String username, ConnectionProperties connectionProperties) {
+        try {
+
+            // Create a new OpenVidu Session
+            Session session = this.openVidu.createSession();
+            // Generate a new token with the recently created connectionProperties
+            String token = session.createConnection(connectionProperties).getToken();
+
+            // Store the session and the token in our collections
+            this.mapSessions.put(ROOM_SESSION_NAME, session);
+            this.mapSessionNamesTokens.put(ROOM_SESSION_NAME, new ConcurrentHashMap<>());
+            this.mapSessionNamesTokens.get(ROOM_SESSION_NAME).put(token, OpenViduRole.PUBLISHER);
+            this.setModelAttributes(model, httpSession, username, token);
+        } catch (Exception e) {
+            // If error just return dashboard.html template
+            model.addAttribute("username", httpSession.getAttribute("loggedUser"));
+        }
+    }
+
+    private void setModelAttributes(Model model, HttpSession httpSession, String username, String token) {
+        model.addAttribute("sessionName", ROOM_SESSION_NAME);
+        model.addAttribute("token", token);
+        model.addAttribute("nickName", username);
+        model.addAttribute("userName", httpSession.getAttribute("loggedUser"));
+    }
+
+    private void addUserIfMissing(String username) {
+        if (!this.usersManager.containsUser(username)) {
+            User user = new User(username, OpenViduRole.PUBLISHER);
+            this.usersManager.addUser(user);
         }
     }
 
