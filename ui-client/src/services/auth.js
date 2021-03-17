@@ -1,8 +1,14 @@
 import { doPost } from "../AppUtils";
-import { JOIN_GAME } from "../routeDefs";
+import { apiPaths } from "../routeDefs";
 
 export const joinGame = async (username) => {
-  return await doPost(JOIN_GAME, {
+  return await doPost(apiPaths.join, {
     username,
+  });
+};
+
+export const leaveGame = async (token) => {
+  return await doPost(apiPaths.leave, {
+    token,
   });
 };

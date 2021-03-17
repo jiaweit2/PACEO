@@ -2952,6 +2952,13 @@ axios@0.20.0:
   dependencies:
     follow-redirects "^1.10.0"
 
+axios@^0.21.1:
+  version "0.21.1"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.1.tgz#22563481962f4d6bde9a76d516ef0e5d3c09b2b8"
+  integrity sha512-dKQiRHxGD9PPRIUNIWvZhPTPpl1rf/OxTYKsqKUDjBwYylTvV7SjSHJb9ratfyzM6wCdLCOYLzs73qpg5c4iGA==
+  dependencies:
+    follow-redirects "^1.10.0"
+
 axobject-query@^2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/axobject-query/-/axobject-query-2.2.0.tgz#943d47e10c0b704aa42275e20edf3722648989be"
@@ -8441,7 +8448,7 @@ open@^7.0.2:
     is-docker "^2.0.0"
     is-wsl "^2.1.1"
 
-openvidu-browser@2.17.0:
+openvidu-browser@2.17.0, openvidu-browser@^2.17.0:
   version "2.17.0"
   resolved "https://registry.yarnpkg.com/openvidu-browser/-/openvidu-browser-2.17.0.tgz#935399f94e91e6f3c244163e74088a734d8f608a"
   integrity sha512-wholLLrs2R1Rf05+QPOH4eIO9LaKO9UvoinGNHU9WoP32L9cU6WeqL0sH3gHhUdiYPqGwTNRPjC3qk/ltjUbDA==

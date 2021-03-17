@@ -3,11 +3,11 @@ import { useState } from "react";
 import { joinGame } from "../../services/auth";
 import "./LoginForm.css";
 
-export const LoginForm = (onLogin) => {
+export const LoginForm = ({ onLogin }) => {
   const [username, setUsername] = useState("");
-  const handleOnJoin = () => {
-    const loginResponse = joinGame(username);
-    if (loginResponse) {
+  const handleOnJoin = async () => {
+    const loginResponse = await joinGame(username);
+    if (loginResponse && onLogin) {
       onLogin(loginResponse);
     }
   };
