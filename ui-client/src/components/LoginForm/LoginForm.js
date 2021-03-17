@@ -3,22 +3,25 @@ import { useState } from "react";
 import { joinGame } from "../../services/auth";
 import "./LoginForm.css";
 
-export const LoginForm = () => {
+export const LoginForm = (onLogin) => {
   const [username, setUsername] = useState("");
   const handleOnJoin = () => {
-    joinGame(username);
+    const loginResponse = joinGame(username);
+    if (loginResponse) {
+      onLogin(loginResponse);
+    }
   };
   return (
-    <form className="JOIN_GAME-form">
+    <form className="login-form">
       <TextField
         id="standard-basic"
         label="Username"
-        className="JOIN_GAME-form__field"
+        className="login-form__field"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
       <Button
-        className="JOIN_GAME-form__join-btn"
+        className="login-form__join-btn"
         onClick={handleOnJoin}
         variant="contained"
         color="primary"

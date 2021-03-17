@@ -5,5 +5,6 @@ export const doPost = async (url, body, headers) => {
     method: "POST",
     body: JSON.stringify(body),
   });
+  console.log(resp);
   return resp.json();
 };

@@ -52,22 +52,21 @@ public class SessionController {
     @RequestMapping(value = "/session", method = RequestMethod.POST)
     public void joinSession(@RequestBody String username, Model model, HttpSession httpSession) {
 
-        String sessionName = "ROOM";
         if (httpSession.getAttribute("loggedUser") == null) {
             httpSession.setAttribute("loggedUser", username);
         }
-        System.out.println("Getting sessionId and token | {sessionName}={" + sessionName + "}");
+        System.out.println("Getting sessionId and token | {sessionName}={" + ROOM_SESSION_NAME + "}");
         this.addUserIfMissing(username);
         String serverData = "{\"serverData\": \"" + httpSession.getAttribute("loggedUser") + "\"}";
         ConnectionProperties connectionProperties = new ConnectionProperties.Builder().type(ConnectionType.WEBRTC)
                 .role(OpenViduRole.PUBLISHER).data(serverData).build();
-        if (this.mapSessions.get(sessionName) != null) {
+        if (this.mapSessions.get(ROOM_SESSION_NAME) != null) {
             // Session already exists
-            System.out.println("Existing session " + sessionName);
+            System.out.println("Existing session " + ROOM_SESSION_NAME);
             joinGameRoom(model, httpSession, username, connectionProperties);
         } else {
             // New session
-            System.out.println("New session " + sessionName);
+            System.out.println("New session " + ROOM_SESSION_NAME);
             startNewGameRoom(model, httpSession, username, connectionProperties);
         }
     }
@@ -76,6 +75,7 @@ public class SessionController {
     public String removeUser(@RequestParam(name = "session-name") String sessionName,
                              @RequestParam(name = "token") String token, Model model, HttpSession httpSession) throws Exception {
 
+        // To be implemented
         try {
             checkUserLogged(httpSession);
         } catch (Exception e) {
