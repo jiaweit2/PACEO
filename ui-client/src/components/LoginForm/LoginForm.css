@@ -1,0 +1,10 @@
+.login-form {
+  display: flex;
+  margin: 0 auto;
+  max-width: 500px;
+  justify-content: center;
+}
+
+.login-form .login-form__field {
+  margin-right: 15px;
+}
