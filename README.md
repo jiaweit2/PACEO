@@ -1,13 +1,31 @@
-[![License badge](https://img.shields.io/badge/license-Apache2-orange.svg)](http://www.apache.org/licenses/LICENSE-2.0)
-[![Documentation Status](https://readthedocs.org/projects/openviduio-docs/badge/?version=stable)](https://docs.openvidu.io/en/stable/?badge=stable)
-[![Docker badge](https://img.shields.io/docker/pulls/openvidu/openvidu-server-kms.svg)](https://hub.docker.com/r/openvidu/openvidu-server-kms)
-[![Support badge](https://img.shields.io/badge/support-sof-yellowgreen.svg)](https://openvidu.discourse.group/)
+# CS 525 Project
 
-[![][OpenViduLogo]](http://openvidu.io)
+## Prerequisites
 
-openvidu-mvc-java
-===
+1. Install node https://nodejs.org/en/
+2. Install yarn https://classic.yarnpkg.com/en/docs/install/#mac-stable
+3. Install docker https://docs.docker.com/get-docker/
 
-Visit [docs.openvidu.io/en/stable/tutorials/openvidu-mvc-java/](http://docs.openvidu.io/en/stable/tutorials/openvidu-mvc-java/)
+## How to run
 
-[OpenViduLogo]: https://secure.gravatar.com/avatar/5daba1d43042f2e4e85849733c8e5702?s=120
+1. Run openvidu server using docker. This will start the server on port 4443
+
+```
+docker run -p 4443:4443 --rm -e OPENVIDU_SECRET=MY_SECRET openvidu/openvidu-server-kms:2.17.0
+```
+
+2. Run project server using IntelliJ. The entry file is App.java
+
+3. Install UI dependencies. Make sure you are in the root of the project and then run the following.
+
+```
+cd ui-client && yarn
+```
+
+4. Start UI server. This will start the UI in port 3000
+
+```
+yarn start
+```
+
+5. Navigate to `http://localhost:3000/` to view the app
