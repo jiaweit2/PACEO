@@ -8,7 +8,7 @@ export const LoginForm = ({ onLogin }) => {
   const handleOnJoin = async () => {
     const loginResponse = await joinGame(username);
     if (loginResponse && onLogin) {
-      onLogin(loginResponse);
+      onLogin(loginResponse, username);
     }
   };
   return (
