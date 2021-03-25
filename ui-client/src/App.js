@@ -7,9 +7,9 @@ const App = () => {
   const [gameToken, setGameToken] = useState(false);
   const [username, setUsername] = useState("");
 
-  const handleOnLogin = (sessionToken, username) => {
+  const handleOnLogin = (sessionToken, name) => {
     setGameToken(sessionToken);
-    setUsername(username);
+    setUsername(name);
   };
 
   // To be implemented

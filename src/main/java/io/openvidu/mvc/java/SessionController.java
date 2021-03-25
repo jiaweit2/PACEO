@@ -11,6 +11,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -68,6 +71,17 @@ public class SessionController {
         // To Be Implemented
     }
 
+    @MessageMapping("/pos")
+    @SendTo("/topic/pos")
+    public String setPos(@Payload String message){
+        String[] payload = message.split("\t");
+        User user = this.usersManager.getUser(payload[0]);
+        System.out.println(payload[0]+" moves to ("+payload[1]+","+payload[2]+")");
+        user.setPos(Integer.parseInt(payload[1]), Integer.parseInt(payload[2]));
+        return message;
+    }
+
+
     private String joinGameRoom(Model model, HttpSession httpSession, String username, ConnectionProperties connectionProperties) {
         try {
             String token = this.mapSessions.get(ROOM_SESSION_NAME).createConnection(connectionProperties).getToken();
@@ -87,7 +101,7 @@ public class SessionController {
             this.setModelAttributes(model, httpSession, username, token);
             return token;
         } catch (Exception e) {
-            throw new RuntimeException("Failed to join game");
+            throw new RuntimeException("Failed to join game", e);
         }
     }
 
