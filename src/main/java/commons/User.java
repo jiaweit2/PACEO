@@ -36,4 +36,8 @@ public class User {
     public void setPos(int x, int y) {
         this.x = x; this.y = y;
     }
+
+    public String toString() {
+        return name + "\t" + x + "\t" + y;
+    }
 }

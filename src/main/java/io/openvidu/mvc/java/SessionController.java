@@ -1,5 +1,6 @@
 package io.openvidu.mvc.java;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -79,6 +80,31 @@ public class SessionController {
         System.out.println(payload[0]+" moves to ("+payload[1]+","+payload[2]+")");
         user.setPos(Integer.parseInt(payload[1]), Integer.parseInt(payload[2]));
         return message;
+    }
+
+    @MessageMapping("/userJoin")
+    @SendTo("/topic/userCurrList")
+    public String userJoin(@Payload String message){
+        String response = "";
+        List<User> users = this.usersManager.getUserList();
+        for(User user: users) {
+            response += user.toString() + "\n";
+        }
+        System.out.println("JOIN");
+        return response;
+    }
+
+    @MessageMapping("/userLeave")
+    @SendTo("/topic/userCurrList")
+    public String userLeave(@Payload String message){
+        this.usersManager.removeUser(message);
+        String response = "";
+        List<User> users = this.usersManager.getUserList();
+        for(User user: users) {
+            response += user.toString() + "\n";
+        }
+        System.out.println("LEAVE");
+        return response;
     }
 
 

@@ -7,6 +7,7 @@ export const Game = ({ username, token, onLeave }) => {
   var stompClient = null;
   var x = 0;
   var y = 0;
+  var users = {};
 
   const handleKey = (e) => {
     switch (e.code) {
@@ -34,6 +35,24 @@ export const Game = ({ username, token, onLeave }) => {
     var socket = SockJS("/sockjs");
     stompClient = Stomp.over(socket);
     stompClient.connect({}, function () {
+      stompClient.send("/app/userJoin", {}, username);
+
+      stompClient.subscribe('/topic/userCurrList', (message) => {
+        message = message.body;
+        users = {};
+        let payload = message.split("\n");
+        payload.forEach(element => {
+          if (element != "") {
+            let userMeta = element.split("\t");
+            users[userMeta[0]] = {
+              x: userMeta[1],
+              y: userMeta[2],
+            }
+          }
+        });
+        console.log("Current Users:", users);
+      });
+
       stompClient.subscribe('/topic/pos', (message) => {
         message = message.body;
         let payload = message.split("\t");
@@ -45,7 +64,8 @@ export const Game = ({ username, token, onLeave }) => {
   }
 
   const disconnectWebsocket = () => {
-    if (stompClient !== null) {
+    if (stompClient !== null && stompClient.status === 'CONNECTED') {
+      stompClient.send("/app/userLeave", {}, username);
       stompClient.disconnect();
     }
     console.log("Disconnected");
@@ -59,7 +79,7 @@ export const Game = ({ username, token, onLeave }) => {
 
     return function cleanup() {
       window.removeEventListener('keydown', handleKey);
-      disconnectWebsocket();
+      disconnectWebsocket(); // not quite working
     };
   });
 
