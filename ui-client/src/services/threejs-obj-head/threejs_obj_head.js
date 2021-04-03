@@ -18,7 +18,7 @@ let object;
 //init();
 //animate();
 
-export function streamFaceOnto(target) {
+export function streamFaceOnto(target, isInitialLoad) {
   const videoElem = document.createElement("video");
   videoElem.autoplay = true;
   document.body.appendChild(videoElem);
@@ -26,8 +26,12 @@ export function streamFaceOnto(target) {
   target.addVideoElement(videoElem);
   videoElem.onloadedmetadata = function () {
     texture = new THREE.VideoTexture(videoElem);
-    init(texture);
-    animate();
+    if (isInitialLoad) {
+      init(texture);
+      animate();
+    } else {
+      loadModel(10);
+    }
   };
 }
 
@@ -58,41 +62,6 @@ function init(texture) {
 
   camera.position.set(0, player.height, -5);
   camera.lookAt(new THREE.Vector3(0, player.height, 0));
-
-  function loadModel() {
-    object.traverse(function (child) {
-      //if ( child.isMesh ) child.material.map = texture; // video texture
-    });
-
-    object.rotation.y = Math.PI;
-    object.scale.set(0.075, 0.075, 0.075);
-    scene.add(object);
-
-    createOriginalCube();
-    function createOriginalCube() {
-      var cubeSize = 3;
-      var geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-      var material = new THREE.MeshLambertMaterial({
-        map: texture,
-        shading: THREE.FlatShading,
-      });
-      var materialArray = [];
-      materialArray.push(new THREE.MeshBasicMaterial({ color: 0xffffff }));
-      materialArray.push(new THREE.MeshBasicMaterial({ color: 0xffffff }));
-      materialArray.push(new THREE.MeshBasicMaterial({ color: 0xffffff }));
-      materialArray.push(new THREE.MeshBasicMaterial({ color: 0xffffff }));
-      materialArray.push(new THREE.MeshBasicMaterial({ color: 0xffffff }));
-      materialArray.push(material);
-      var materials = new THREE.MeshFaceMaterial(materialArray);
-      var cubeFace = new THREE.Mesh(geometry, materials);
-      cubeFace.position.y += cubeSize / 2;
-      var cubeOffset = 0.35;
-      cubeFace.position.z -= cubeOffset;
-      cubeFace.scale.set(cubeOffset, cubeOffset, cubeOffset);
-      //cubeFace.position.x = 10;
-      scene.add(cubeFace);
-    }
-  }
 
   const manager = new THREE.LoadingManager(loadModel);
   manager.onProgress = function (item, loaded, total) {
@@ -193,6 +162,43 @@ function render() {
 
   texture.needsUpdate = true;
   renderer.render(scene, camera);
+}
+
+function loadModel(xOffset = 0) {
+  object.traverse(function (child) {
+    //if ( child.isMesh ) child.material.map = texture; // video texture
+  });
+  object.position.x = xOffset;
+  object.rotation.y = Math.PI;
+  object.scale.set(0.075, 0.075, 0.075);
+  scene.add(object);
+
+  createOriginalCube(texture, xOffset);
+}
+
+function createOriginalCube(texture, xOffset = 0) {
+  var cubeSize = 3;
+  var geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+  var material = new THREE.MeshLambertMaterial({
+    map: texture,
+    shading: THREE.FlatShading,
+  });
+  var materialArray = [];
+  materialArray.push(new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  materialArray.push(new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  materialArray.push(new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  materialArray.push(new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  materialArray.push(new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  materialArray.push(material);
+  var materials = new THREE.MeshFaceMaterial(materialArray);
+  var cubeFace = new THREE.Mesh(geometry, materials);
+  cubeFace.position.y += cubeSize / 2;
+  cubeFace.position.x = xOffset;
+  var cubeOffset = 0.35;
+  cubeFace.position.z -= cubeOffset;
+  cubeFace.scale.set(cubeOffset, cubeOffset, cubeOffset);
+  //cubeFace.position.x = 10;
+  scene.add(cubeFace);
 }
 
 function keyDown(event) {

@@ -20,6 +20,6 @@ export const connectToSession = async (token, username, options = {}) => {
 
 export const startUserVideo = () => {
   const publisher = openVidu.initPublisher(undefined);
-  streamFaceOnto(publisher);
+  streamFaceOnto(publisher, true);
   session.publish(publisher);
 };
