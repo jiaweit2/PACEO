@@ -1,6 +1,8 @@
 import * as THREE from "three";
 
 import { OBJLoader } from "./OBJLoader.js";
+import headObj from "./basic_head.obj";
+import { startUserVideo } from "../openVidu";
 
 let container;
 
@@ -16,10 +18,14 @@ let object;
 //init();
 //animate();
 
-export function streamFaceOntoSurface(video) {
-  video.onloadedmetadata = function () {
-    video.play();
-    texture = new THREE.Texture(video);
+export function streamFaceOnto(target) {
+  const videoElem = document.createElement("video");
+  videoElem.autoplay = true;
+  document.body.appendChild(videoElem);
+  videoElem.classList.add("user-video");
+  target.addVideoElement(videoElem);
+  videoElem.onloadedmetadata = function () {
+    texture = new THREE.VideoTexture(videoElem);
     init(texture);
     animate();
   };
@@ -27,7 +33,8 @@ export function streamFaceOntoSurface(video) {
 
 function init(texture) {
   container = document.createElement("div");
-  document.body.appendChild(container);
+  const app = document.querySelector(".App");
+  app.appendChild(container);
 
   camera = new THREE.PerspectiveCamera(90, 1280 / 720, 0.1, 1000);
 
@@ -108,10 +115,10 @@ function init(texture) {
 
   const loader = new OBJLoader(manager);
   loader.load(
-    "basic_head.obj",
+    headObj,
     function (obj) {
       //loader.load( 'head.obj', function ( obj ) {
-
+      console.log("OBJ", obj);
       object = obj;
     },
     onProgress,

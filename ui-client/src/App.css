@@ -1,6 +1,5 @@
 .App {
   text-align: center;
-  margin-top: 100px;
 }
 
 .App-logo {
@@ -36,4 +35,11 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.user-video {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 1px;
 }
