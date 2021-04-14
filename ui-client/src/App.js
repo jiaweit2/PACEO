@@ -17,6 +17,8 @@ const App = () => {
 
   return (
     <div className="App">
+      {/* <Game token={"gameToken"} username={username} /> */}
+
       {gameToken ? (
         <Game token={gameToken} username={username} />
       ) : (

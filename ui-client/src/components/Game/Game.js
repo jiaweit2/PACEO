@@ -2,6 +2,10 @@ import { connectToSession } from "../../services/openVidu";
 import SockJS from "sockjs-client"
 import { Stomp } from "@stomp/stompjs"
 import React, { useEffect } from "react";
+import Navbar from 'react-bootstrap/Navbar';
+import Nav from 'react-bootstrap/Nav';
+import NavDropdown from 'react-bootstrap/NavDropdown';
+
 
 export const Game = ({ username, token, onLeave }) => {
   var stompClient = null;
@@ -83,10 +87,25 @@ export const Game = ({ username, token, onLeave }) => {
     };
   });
 
+  const logout = () => {
+    disconnectWebsocket();
+    window.location.reload();
+  }
+
 
 
   return (
     <div className="game">
+      <Navbar fixed="top" bg="light" expand="lg">
+        <Navbar.Brand href="#home">PACEO</Navbar.Brand>
+        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        <Navbar.Collapse id="basic-navbar-nav">
+          <Nav className="ml-auto">
+            <Nav.Link href="#about">About</Nav.Link>
+            <Nav.Link onClick={logout}>Logout</Nav.Link>
+          </Nav>
+        </Navbar.Collapse>
+      </Navbar>
       <div id="user-videos-container" className="video"></div>
     </div>
   );
