@@ -10,6 +10,7 @@ public class UsersManager {
 
     private static UsersManager INSTANCE;
     private Map<String, User> users = new ConcurrentHashMap<>();
+    private Map<String, String> sessionIDToUser = new ConcurrentHashMap<>();
 
     private UsersManager() {
     }
@@ -30,7 +31,21 @@ public class UsersManager {
     }
 
     public User getUser(String username) {
-        return this.users.get(username);
+        if (users.containsKey(username)){
+            return users.get(username);
+        } else {
+            return null;
+        }
+    }
+
+    public void setSessionIDToUser(String sessionID, String username) {this.sessionIDToUser.put(sessionID, username); }
+
+    public User getUserBySessionID(String sessionID) {
+        if (sessionIDToUser.containsKey(sessionID)) {
+            return this.getUser(sessionIDToUser.get(sessionID));
+        } else {
+            return null;
+        }
     }
 
     public List<User> getUserList() { return new ArrayList<User>(users.values());}

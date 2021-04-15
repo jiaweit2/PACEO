@@ -12,6 +12,7 @@ export const Game = ({ username, token, onLeave }) => {
   var x = 0;
   var y = 0;
   var users = {};
+  var sessionID = "";
 
   const handleKey = (e) => {
     switch (e.code) {
@@ -39,7 +40,9 @@ export const Game = ({ username, token, onLeave }) => {
     var socket = SockJS("/sockjs");
     stompClient = Stomp.over(socket);
     stompClient.connect({}, function () {
-      stompClient.send("/app/userJoin", {}, username);
+      sessionID = socket._transport.url.split("/").pop();
+
+      stompClient.send("/app/userJoin", {}, username + "\t" + sessionID);
 
       stompClient.subscribe('/topic/userCurrList', (message) => {
         message = message.body;
@@ -64,26 +67,33 @@ export const Game = ({ username, token, onLeave }) => {
           console.log("Receive message: " + message);
         }
       });
+    }, function (e) {
+      console.log("LOGGGGG33333", e)
     });
   }
 
   const disconnectWebsocket = () => {
-    if (stompClient !== null && stompClient.status === 'CONNECTED') {
+    if (stompClient !== null && stompClient.state === 0) {
       stompClient.send("/app/userLeave", {}, username);
-      stompClient.disconnect();
+      // stompClient.disconnect();
     }
-    console.log("Disconnected");
+    console.log("Disconnected", username);
   }
 
   useEffect(() => {
-    connectToSession(token, username);
+
+    console.log("LOGGGG1111")
+    if (username.length == 0) {
+      console.warn("Username is EMPTY");
+      return;
+    }
+    // connectToSession(token, username);
 
     connectWebsocket();
     window.addEventListener('keydown', handleKey);
 
     return function cleanup() {
       window.removeEventListener('keydown', handleKey);
-      disconnectWebsocket(); // not quite working
     };
   });
 
