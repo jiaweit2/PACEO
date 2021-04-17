@@ -88,7 +88,7 @@ public class SessionController {
             this.setModelAttributes(model, httpSession, username, token);
             return token;
         } catch (Exception e) {
-            throw new RuntimeException("Failed to join game");
+            throw new RuntimeException("Failed to join OpenVidu server", e);
         }
     }
 
