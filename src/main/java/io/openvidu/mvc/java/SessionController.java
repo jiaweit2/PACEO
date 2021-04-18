@@ -6,6 +6,7 @@ import javax.servlet.http.HttpSession;
 
 import commons.User;
 import commons.UsersManager;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -42,23 +43,20 @@ public class SessionController {
 
     @RequestMapping(value = "/session", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> joinSession(@RequestBody String username, Model model, HttpSession httpSession) {
-
-        if (httpSession.getAttribute("loggedUser") == null) {
-            httpSession.setAttribute("loggedUser", username);
-        }
+        
         System.out.println("Getting sessionId and token | {sessionName}={" + ROOM_SESSION_NAME + "}");
         this.addUserIfMissing(username);
-        String serverData = "{\"serverData\": \"" + httpSession.getAttribute("loggedUser") + "\"}";
+        String serverData = "{\"serverData\": \"" + username + "\"}";
         ConnectionProperties connectionProperties = new ConnectionProperties.Builder().type(ConnectionType.WEBRTC)
                 .role(OpenViduRole.PUBLISHER).data(serverData).build();
         String token;
         Session activeSession = this.getActiveRoomSession();
         if (activeSession != null) {
             System.out.println("Existing session " + ROOM_SESSION_NAME);
-            token = joinGameRoom(model, httpSession, username, connectionProperties, activeSession);
+            token = joinGameRoom(connectionProperties, activeSession);
         } else {
             System.out.println("New session " + ROOM_SESSION_NAME);
-            token = startNewGameRoom(model, httpSession, username, connectionProperties);
+            token = startNewGameRoom(connectionProperties);
         }
         return new ResponseEntity<>(token, HttpStatus.ACCEPTED);
     }
@@ -82,30 +80,28 @@ public class SessionController {
     }
 
 
-    private String joinGameRoom(Model model, HttpSession httpSession, String username, ConnectionProperties connectionProperties, Session activeSession) {
+    private String joinGameRoom(ConnectionProperties connectionProperties, Session activeSession) {
         try {
-            String token = activeSession.createConnection(connectionProperties).getToken();
-            this.setModelAttributes(model, httpSession, username, token);
-            return token;
+            return activeSession.createConnection(connectionProperties).getToken();
         } catch (Exception e) {
-            System.out.println("Failed to join room.  Starting new session.  This happens whenever the session has expired.");
-            return startNewGameRoom(model, httpSession, username, connectionProperties);
+            throw new RuntimeException("Failed to join room.  Starting new session.");
         }
     }
 
-    private String startNewGameRoom(Model model, HttpSession httpSession, String username, ConnectionProperties connectionProperties) {
+    private String startNewGameRoom(ConnectionProperties connectionProperties) {
         try {
             Session session = this.openVidu.createSession();
             this.activeSessionId = session.getSessionId();
-            String token = session.createConnection(connectionProperties).getToken();
-            this.setModelAttributes(model, httpSession, username, token);
-            return token;
+            return session.createConnection(connectionProperties).getToken();
         } catch (Exception e) {
             throw new RuntimeException("Failed to join game", e);
         }
     }
 
     private Session getActiveRoomSession() {
+        if (StringUtils.isBlank(this.activeSessionId)) {
+            return null;
+        }
         List<Session> activeSessions = this.openVidu.getActiveSessions();
         for (Session session : activeSessions) {
             if (session.getSessionId().equals(this.activeSessionId)) {
@@ -115,24 +111,10 @@ public class SessionController {
         return null;
     }
 
-    private void setModelAttributes(Model model, HttpSession httpSession, String username, String token) {
-        model.addAttribute("sessionName", ROOM_SESSION_NAME);
-        model.addAttribute("token", token);
-        model.addAttribute("nickName", username);
-        model.addAttribute("userName", httpSession.getAttribute("loggedUser"));
-    }
-
     private void addUserIfMissing(String username) {
         if (!this.usersManager.containsUser(username)) {
             User user = new User(username, OpenViduRole.PUBLISHER);
             this.usersManager.addUser(user);
         }
     }
-
-    private void checkUserLogged(HttpSession httpSession) throws Exception {
-        if (httpSession == null || httpSession.getAttribute("loggedUser") == null) {
-            throw new Exception("User not logged");
-        }
-    }
-
 }

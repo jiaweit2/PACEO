@@ -12,7 +12,8 @@ const session = openVidu.initSession();
 export const connectToSession = async (token, username, options = {}) => {
   session.on("streamCreated", (event) => {
     const subscriber = session.subscribe(event.stream, undefined);
-    streamFaceOnto(subscriber);
+    console.log("abc");
+    // streamFaceOnto(subscriber);
   });
   await session.connect(token, { clientData: username });
   startUserVideo();
