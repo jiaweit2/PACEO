@@ -18,7 +18,7 @@ let object;
 //init();
 //animate();
 
-export function streamFaceOnto(target, shouldLoadModel) {
+export function streamFaceOnto(target, shouldLoadModel, isInitialLoad) {
   const videoElem = document.createElement("video");
   videoElem.autoplay = true;
   document.body.appendChild(videoElem);
@@ -26,17 +26,56 @@ export function streamFaceOnto(target, shouldLoadModel) {
   target.addVideoElement(videoElem);
   videoElem.onloadedmetadata = function () {
     texture = new THREE.VideoTexture(videoElem);
-    if (!object) {
-      init(shouldLoadModel);
-      animate();
-    }
     if (shouldLoadModel && object) {
       loadModel(10);
+    }
+    if (!object) {
+      loadObject(shouldLoadModel);
+    }
+    if (isInitialLoad) {
+      init();
+      animate();
     }
   };
 }
 
-function init(shouldLoadModel) {
+function loadObject(shouldLoadModel) {
+  // model
+  function onProgress(xhr) {
+    if (xhr.lengthComputable) {
+      const percentComplete = (xhr.loaded / xhr.total) * 100;
+      console.log("model " + Math.round(percentComplete, 2) + "% downloaded");
+    }
+  }
+
+  function onError() {}
+  const manager = new THREE.LoadingManager(loadModel);
+  manager.onProgress = function (item, loaded, total) {
+    console.log(item, loaded, total);
+  };
+
+  // texture
+  const textureLoader = new THREE.TextureLoader(manager);
+  //const texture = textureLoader.load( 'linkedin.jpg' );
+  //
+
+  const loader = new OBJLoader(manager);
+  loader.load(
+    headObj,
+    function (obj) {
+      //loader.load( 'head.obj', function ( obj ) {
+      console.log("OBJ", obj);
+      object = obj;
+      if (shouldLoadModel) {
+        loadModel(10);
+      }
+    },
+    onProgress,
+    onError
+  );
+}
+
+function init() {
   container = document.createElement("div");
   const app = document.querySelector(".App");
   app.appendChild(container);
@@ -63,42 +102,6 @@ function init(shouldLoadModel) {
 
   camera.position.set(0, player.height, -5);
   camera.lookAt(new THREE.Vector3(0, player.height, 0));
-
-  const manager = new THREE.LoadingManager(loadModel);
-  manager.onProgress = function (item, loaded, total) {
-    console.log(item, loaded, total);
-  };
-
-  // texture
-  const textureLoader = new THREE.TextureLoader(manager);
-  //const texture = textureLoader.load( 'linkedin.jpg' );
-
-  // model
-  function onProgress(xhr) {
-    if (xhr.lengthComputable) {
-      const percentComplete = (xhr.loaded / xhr.total) * 100;
-      console.log("model " + Math.round(percentComplete, 2) + "% downloaded");
-    }
-  }
-
-  function onError() {}
-
-  const loader = new OBJLoader(manager);
-  loader.load(
-    headObj,
-    function (obj) {
-      //loader.load( 'head.obj', function ( obj ) {
-      console.log("OBJ", obj);
-      object = obj;
-      if (shouldLoadModel) {
-        loadModel(10);
-      }
-    },
-    onProgress,
-    onError
-  );
-
-  //
 
   renderer = new THREE.WebGLRenderer();
   renderer.setPixelRatio(window.devicePixelRatio);
