@@ -46,17 +46,22 @@ export const Game = ({ username, token, onLeave }) => {
 
       stompClient.subscribe('/topic/userCurrList', (message) => {
         message = message.body;
-        users = {};
-        let payload = message.split("\n");
-        payload.forEach(element => {
-          if (element != "") {
-            let userMeta = element.split("\t");
-            users[userMeta[0]] = {
-              x: userMeta[1],
-              y: userMeta[2],
+        if (message.substr(0, 5) == "LEAVE") {
+          // A user has left
+          delete users[message.split("\t")[1]]
+        } else {
+          users = {};
+          let payload = message.split("\n");
+          payload.forEach(element => {
+            if (element != "") {
+              let userMeta = element.split("\t");
+              users[userMeta[0]] = {
+                x: userMeta[1],
+                y: userMeta[2],
+              }
             }
-          }
-        });
+          });
+        }
         console.log("Current Users:", users);
       });
 
@@ -67,8 +72,6 @@ export const Game = ({ username, token, onLeave }) => {
           console.log("Receive message: " + message);
         }
       });
-    }, function (e) {
-      console.log("LOGGGGG33333", e)
     });
   }
 
@@ -87,7 +90,7 @@ export const Game = ({ username, token, onLeave }) => {
       console.warn("Username is EMPTY");
       return;
     }
-    // connectToSession(token, username);
+    connectToSession(token, username);
 
     connectWebsocket();
     window.addEventListener('keydown', handleKey);

@@ -8,6 +8,7 @@ import javax.servlet.http.HttpSession;
 
 import commons.User;
 import commons.UsersManager;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -39,6 +41,9 @@ public class SessionController {
     private Map<String, Session> mapSessions = new ConcurrentHashMap<>();
 
     private UsersManager usersManager;
+
+    @Autowired
+    private SimpMessagingTemplate template;
 
     @EventListener
     public void onSocketDisconnected(SessionDisconnectEvent event) {
@@ -84,7 +89,7 @@ public class SessionController {
 
         System.out.println("Removing user | sessioName=" + ROOM_SESSION_NAME + ", token=" + token);
         // To Be Implemented
-        // Add to onSocketDisconnected()
+        // use userLeave
     }
 
     @MessageMapping("/pos")
@@ -114,17 +119,15 @@ public class SessionController {
         return response;
     }
 
-    @MessageMapping("/userLeave")
-    @SendTo("/topic/userCurrList")
-    public String userLeave(String username){
+    public void userLeave(String username){
         this.usersManager.removeUser(username);
-        String response = "";
-        List<User> users = this.usersManager.getUserList();
-        for(User user: users) {
-            response += user.toString() + "\n";
-        }
+//        String response = "";
+//        List<User> users = this.usersManager.getUserList();
+//        for(User user: users) {
+//            response += user.toString() + "\n";
+//        }
         System.out.println("LEAVE");
-        return response;
+        this.template.convertAndSend("/topic/userCurrList", "LEAVE"+"\t"+username);
     }
 
 
