@@ -1,7 +1,6 @@
 package io.openvidu.mvc.java;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
 
 import javax.servlet.http.HttpSession;
 
@@ -32,7 +31,7 @@ public class SessionController {
 
     private final String ROOM_SESSION_NAME = "ROOM";
     private final OpenVidu openVidu;
-    private Map<String, Session> mapSessions = new ConcurrentHashMap<>();
+    private String activeSessionId;
 
     private UsersManager usersManager;
 
@@ -53,9 +52,10 @@ public class SessionController {
         ConnectionProperties connectionProperties = new ConnectionProperties.Builder().type(ConnectionType.WEBRTC)
                 .role(OpenViduRole.PUBLISHER).data(serverData).build();
         String token;
-        if (this.mapSessions.get(ROOM_SESSION_NAME) != null) {
+        Session activeSession = this.getActiveRoomSession();
+        if (activeSession != null) {
             System.out.println("Existing session " + ROOM_SESSION_NAME);
-            token = joinGameRoom(model, httpSession, username, connectionProperties);
+            token = joinGameRoom(model, httpSession, username, connectionProperties, activeSession);
         } else {
             System.out.println("New session " + ROOM_SESSION_NAME);
             token = startNewGameRoom(model, httpSession, username, connectionProperties);
@@ -73,36 +73,46 @@ public class SessionController {
 
     @MessageMapping("/pos")
     @SendTo("/topic/pos")
-    public String setPos(@Payload String message){
+    public String setPos(@Payload String message) {
         String[] payload = message.split("\t");
         User user = this.usersManager.getUser(payload[0]);
-        System.out.println(payload[0]+" moves to ("+payload[1]+","+payload[2]+")");
+        System.out.println(payload[0] + " moves to (" + payload[1] + "," + payload[2] + ")");
         user.setPos(Integer.parseInt(payload[1]), Integer.parseInt(payload[2]));
         return message;
     }
 
 
-    private String joinGameRoom(Model model, HttpSession httpSession, String username, ConnectionProperties connectionProperties) {
+    private String joinGameRoom(Model model, HttpSession httpSession, String username, ConnectionProperties connectionProperties, Session activeSession) {
         try {
-            String token = this.mapSessions.get(ROOM_SESSION_NAME).createConnection(connectionProperties).getToken();
+            String token = activeSession.createConnection(connectionProperties).getToken();
             this.setModelAttributes(model, httpSession, username, token);
             return token;
         } catch (Exception e) {
-            throw new RuntimeException("Failed to join OpenVidu server", e);
+            System.out.println("Failed to join room.  Starting new session.  This happens whenever the session has expired.");
+            return startNewGameRoom(model, httpSession, username, connectionProperties);
         }
     }
 
     private String startNewGameRoom(Model model, HttpSession httpSession, String username, ConnectionProperties connectionProperties) {
         try {
-
             Session session = this.openVidu.createSession();
+            this.activeSessionId = session.getSessionId();
             String token = session.createConnection(connectionProperties).getToken();
-            this.mapSessions.put(ROOM_SESSION_NAME, session);
             this.setModelAttributes(model, httpSession, username, token);
             return token;
         } catch (Exception e) {
             throw new RuntimeException("Failed to join game", e);
         }
+    }
+
+    private Session getActiveRoomSession() {
+        List<Session> activeSessions = this.openVidu.getActiveSessions();
+        for (Session session : activeSessions) {
+            if (session.getSessionId().equals(this.activeSessionId)) {
+                return session;
+            }
+        }
+        return null;
     }
 
     private void setModelAttributes(Model model, HttpSession httpSession, String username, String token) {
