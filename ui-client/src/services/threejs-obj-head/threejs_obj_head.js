@@ -18,7 +18,7 @@ let object;
 //init();
 //animate();
 
-export function streamFaceOnto(target, isInitialLoad) {
+export function streamFaceOnto(target, shouldLoadModel) {
   const videoElem = document.createElement("video");
   videoElem.autoplay = true;
   document.body.appendChild(videoElem);
@@ -26,16 +26,17 @@ export function streamFaceOnto(target, isInitialLoad) {
   target.addVideoElement(videoElem);
   videoElem.onloadedmetadata = function () {
     texture = new THREE.VideoTexture(videoElem);
-    if (isInitialLoad) {
-      init(texture);
+    if (!object) {
+      init(shouldLoadModel);
       animate();
-    } else {
+    }
+    if (shouldLoadModel && object) {
       loadModel(10);
     }
   };
 }
 
-function init(texture) {
+function init(shouldLoadModel) {
   container = document.createElement("div");
   const app = document.querySelector(".App");
   app.appendChild(container);
@@ -89,6 +90,9 @@ function init(texture) {
       //loader.load( 'head.obj', function ( obj ) {
       console.log("OBJ", obj);
       object = obj;
+      if (shouldLoadModel) {
+        loadModel(10);
+      }
     },
     onProgress,
     onError

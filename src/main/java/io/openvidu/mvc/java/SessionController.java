@@ -84,7 +84,7 @@ public class SessionController {
         try {
             return activeSession.createConnection(connectionProperties).getToken();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to join room.  Starting new session.");
+            throw new RuntimeException("Failed to join room", e);
         }
     }
 

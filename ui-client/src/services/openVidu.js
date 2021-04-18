@@ -12,8 +12,7 @@ const session = openVidu.initSession();
 export const connectToSession = async (token, username, options = {}) => {
   session.on("streamCreated", (event) => {
     const subscriber = session.subscribe(event.stream, undefined);
-    console.log("abc");
-    // streamFaceOnto(subscriber);
+    streamFaceOnto(subscriber, true);
   });
   await session.connect(token, { clientData: username });
   startUserVideo();
@@ -21,6 +20,6 @@ export const connectToSession = async (token, username, options = {}) => {
 
 export const startUserVideo = () => {
   const publisher = openVidu.initPublisher(undefined);
-  streamFaceOnto(publisher, true);
+  streamFaceOnto(publisher);
   session.publish(publisher);
 };
