@@ -108,8 +108,6 @@ function init() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   container.appendChild(renderer.domElement);
 
-  //
-
   window.addEventListener("resize", onWindowResize);
 }
 

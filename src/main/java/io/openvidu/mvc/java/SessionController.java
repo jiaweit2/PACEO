@@ -6,6 +6,7 @@ import javax.servlet.http.HttpSession;
 
 import commons.User;
 import commons.UsersManager;
+import io.openvidu.java.client.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -20,12 +21,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import io.openvidu.java.client.ConnectionProperties;
-import io.openvidu.java.client.ConnectionType;
-import io.openvidu.java.client.OpenVidu;
-import io.openvidu.java.client.OpenViduRole;
-import io.openvidu.java.client.Session;
 
 @Controller
 public class SessionController {
@@ -43,7 +38,7 @@ public class SessionController {
 
     @RequestMapping(value = "/session", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> joinSession(@RequestBody String username, Model model, HttpSession httpSession) {
-        
+
         System.out.println("Getting sessionId and token | {sessionName}={" + ROOM_SESSION_NAME + "}");
         this.addUserIfMissing(username);
         String serverData = "{\"serverData\": \"" + username + "\"}";
@@ -83,7 +78,14 @@ public class SessionController {
     private String joinGameRoom(ConnectionProperties connectionProperties, Session activeSession) {
         try {
             return activeSession.createConnection(connectionProperties).getToken();
-        } catch (Exception e) {
+        } catch (OpenViduHttpException e) {
+            if (e.getStatus() == HttpStatus.NOT_FOUND.value()) {
+                String errorMessage = String.format("Session %s no longer exists.  Starting a new room", this.activeSessionId);
+                System.out.println(errorMessage);
+                return startNewGameRoom(connectionProperties);
+            }
+            throw new RuntimeException("Failed to join room", e);
+        } catch (OpenViduJavaClientException e) {
             throw new RuntimeException("Failed to join room", e);
         }
     }
