@@ -1,4 +1,18 @@
 .video {
   height: 400px;
   width: 400px;
+  position: relative;
+}
+
+.individual-user-face {
+  position: relative;
+}
+
+.individual-user-face__streamed-user-img {
+  border-radius: 50%;
+  width: 200px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
