@@ -9,6 +9,8 @@ import javax.servlet.http.HttpSession;
 import commons.User;
 import commons.UsersManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import io.openvidu.java.client.*;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpStatus;
@@ -26,19 +28,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import io.openvidu.java.client.ConnectionProperties;
-import io.openvidu.java.client.ConnectionType;
-import io.openvidu.java.client.OpenVidu;
-import io.openvidu.java.client.OpenViduRole;
-import io.openvidu.java.client.Session;
-import org.springframework.web.socket.messaging.SessionDisconnectEvent;
-
 @Controller
 public class SessionController {
 
     private final String ROOM_SESSION_NAME = "ROOM";
     private final OpenVidu openVidu;
-    private Map<String, Session> mapSessions = new ConcurrentHashMap<>();
+    private String activeSessionId;
 
     private UsersManager usersManager;
 
@@ -65,20 +60,18 @@ public class SessionController {
     @RequestMapping(value = "/session", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> joinSession(@RequestBody String username, Model model, HttpSession httpSession) {
 
-        if (httpSession.getAttribute("loggedUser") == null) {
-            httpSession.setAttribute("loggedUser", username);
-        }
         System.out.println("Getting sessionId and token | {sessionName}={" + ROOM_SESSION_NAME + "}");
         String serverData = "{\"serverData\": \"" + httpSession.getAttribute("loggedUser") + "\"}";
         ConnectionProperties connectionProperties = new ConnectionProperties.Builder().type(ConnectionType.WEBRTC)
                 .role(OpenViduRole.PUBLISHER).data(serverData).build();
         String token;
-        if (this.mapSessions.get(ROOM_SESSION_NAME) != null) {
+        Session activeSession = this.getActiveRoomSession();
+        if (activeSession != null) {
             System.out.println("Existing session " + ROOM_SESSION_NAME);
-            token = joinGameRoom(model, httpSession, username, connectionProperties);
+            token = joinGameRoom(connectionProperties, activeSession);
         } else {
             System.out.println("New session " + ROOM_SESSION_NAME);
-            token = startNewGameRoom(model, httpSession, username, connectionProperties);
+            token = startNewGameRoom(connectionProperties);
         }
         return new ResponseEntity<>(token, HttpStatus.ACCEPTED);
     }
@@ -94,10 +87,10 @@ public class SessionController {
 
     @MessageMapping("/pos")
     @SendTo("/topic/pos")
-    public String setPos(@Payload String message){
+    public String setPos(@Payload String message) {
         String[] payload = message.split("\t");
         User user = this.usersManager.getUser(payload[0]);
-        System.out.println(payload[0]+" moves to ("+payload[1]+","+payload[2]+")");
+        System.out.println(payload[0] + " moves to (" + payload[1] + "," + payload[2] + ")");
         user.setPos(Integer.parseInt(payload[1]), Integer.parseInt(payload[2]));
         return message;
     }
@@ -131,34 +124,42 @@ public class SessionController {
     }
 
 
-    private String joinGameRoom(Model model, HttpSession httpSession, String username, ConnectionProperties connectionProperties) {
+    private String joinGameRoom(ConnectionProperties connectionProperties, Session activeSession) {
         try {
-            String token = this.mapSessions.get(ROOM_SESSION_NAME).createConnection(connectionProperties).getToken();
-            this.setModelAttributes(model, httpSession, username, token);
-            return token;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to join game");
+            return activeSession.createConnection(connectionProperties).getToken();
+        } catch (OpenViduHttpException e) {
+            if (e.getStatus() == HttpStatus.NOT_FOUND.value()) {
+                String errorMessage = String.format("Session %s no longer exists.  Starting a new room", this.activeSessionId);
+                System.out.println(errorMessage);
+                return startNewGameRoom(connectionProperties);
+            }
+            throw new RuntimeException("Failed to join room", e);
+        } catch (OpenViduJavaClientException e) {
+            throw new RuntimeException("Failed to join room", e);
         }
     }
 
-    private String startNewGameRoom(Model model, HttpSession httpSession, String username, ConnectionProperties connectionProperties) {
+    private String startNewGameRoom(ConnectionProperties connectionProperties) {
         try {
-
             Session session = this.openVidu.createSession();
-            String token = session.createConnection(connectionProperties).getToken();
-            this.mapSessions.put(ROOM_SESSION_NAME, session);
-            this.setModelAttributes(model, httpSession, username, token);
-            return token;
+            this.activeSessionId = session.getSessionId();
+            return session.createConnection(connectionProperties).getToken();
         } catch (Exception e) {
             throw new RuntimeException("Failed to join game", e);
         }
     }
 
-    private void setModelAttributes(Model model, HttpSession httpSession, String username, String token) {
-        model.addAttribute("sessionName", ROOM_SESSION_NAME);
-        model.addAttribute("token", token);
-        model.addAttribute("nickName", username);
-        model.addAttribute("userName", httpSession.getAttribute("loggedUser"));
+    private Session getActiveRoomSession() {
+        if (StringUtils.isBlank(this.activeSessionId)) {
+            return null;
+        }
+        List<Session> activeSessions = this.openVidu.getActiveSessions();
+        for (Session session : activeSessions) {
+            if (session.getSessionId().equals(this.activeSessionId)) {
+                return session;
+            }
+        }
+        return null;
     }
 
     private void addUserIfMissing(String username) {
@@ -167,11 +168,4 @@ public class SessionController {
             this.usersManager.addUser(user);
         }
     }
-
-    private void checkUserLogged(HttpSession httpSession) throws Exception {
-        if (httpSession == null || httpSession.getAttribute("loggedUser") == null) {
-            throw new Exception("User not logged");
-        }
-    }
-
 }

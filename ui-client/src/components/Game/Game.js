@@ -1,11 +1,12 @@
 import { connectToSession } from "../../services/openVidu";
-import SockJS from "sockjs-client"
-import { Stomp } from "@stomp/stompjs"
 import React, { useEffect } from "react";
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
 import NavDropdown from 'react-bootstrap/NavDropdown';
 
+import "./Game.css";
+import SockJS from "sockjs-client";
+import { Stomp } from "@stomp/stompjs";
 
 export const Game = ({ username, token, onLeave }) => {
   var stompClient = null;
@@ -34,7 +35,7 @@ export const Game = ({ username, token, onLeave }) => {
     if (stompClient != null) {
       stompClient.send("/app/pos", {}, username + "\t" + x + "\t" + y);
     }
-  }
+  };
 
   const connectWebsocket = () => {
     var socket = SockJS("/sockjs");
@@ -73,7 +74,7 @@ export const Game = ({ username, token, onLeave }) => {
         }
       });
     });
-  }
+  };
 
   const disconnectWebsocket = () => {
     if (stompClient !== null && stompClient.state === 0) {
@@ -91,9 +92,8 @@ export const Game = ({ username, token, onLeave }) => {
       return;
     }
     connectToSession(token, username);
-
     connectWebsocket();
-    window.addEventListener('keydown', handleKey);
+    window.addEventListener("keydown", handleKey);
 
     return function cleanup() {
       window.removeEventListener('keydown', handleKey);

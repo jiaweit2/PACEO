@@ -17,9 +17,7 @@ const App = () => {
 
   return (
     <div className="App">
-      {/* <Game token={"gameToken"} username={username} /> */}
-
-      {gameToken ? (
+      {gameToken && username ? (
         <Game token={gameToken} username={username} />
       ) : (
         <LoginForm onLogin={handleOnLogin} onLeave={handleOnLeave} />
