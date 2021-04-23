@@ -70,7 +70,15 @@ export const Game = ({ username, token, onLeave }) => {
         message = message.body;
         let payload = message.split("\t");
         if (payload[0] != username) {
-          console.log("Receive message: " + message);
+          if (payload[0] in users) {
+            users[payload[0]].x = payload[1]
+            users[payload[0]].y = payload[2]
+          } else {
+            users[payload[0]] = {
+              x: payload[1],
+              y: payload[2]
+            }
+          }
         }
       });
     });
@@ -78,15 +86,13 @@ export const Game = ({ username, token, onLeave }) => {
 
   const disconnectWebsocket = () => {
     if (stompClient !== null && stompClient.state === 0) {
-      stompClient.send("/app/userLeave", {}, username);
-      // stompClient.disconnect();
+      stompClient.disconnect();
     }
     console.log("Disconnected", username);
   }
 
   useEffect(() => {
-
-    console.log("LOGGGG1111")
+    // Issue: useEffect() is called twice when started?
     if (username.length == 0) {
       console.warn("Username is EMPTY");
       return;
