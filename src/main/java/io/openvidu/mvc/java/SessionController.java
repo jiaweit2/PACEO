@@ -1,20 +1,26 @@
 package io.openvidu.mvc.java;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.http.HttpSession;
 
 import commons.User;
 import commons.UsersManager;
+import org.springframework.beans.factory.annotation.Autowired;
 import io.openvidu.java.client.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -31,6 +37,21 @@ public class SessionController {
 
     private UsersManager usersManager;
 
+    @Autowired
+    private SimpMessagingTemplate template;
+
+    @EventListener
+    public void onSocketDisconnected(SessionDisconnectEvent event) {
+        StompHeaderAccessor sha = StompHeaderAccessor.wrap(event.getMessage());
+        String sessionID = sha.getSessionId();
+        User user = this.usersManager.getUserBySessionID(sessionID);
+        if (user != null){
+            System.out.println("[Disonnected] " + user.getName());
+            userLeave(user.getName());
+        }
+
+    }
+
     public SessionController(@Value("${openvidu.secret}") String secret, @Value("${openvidu.url}") String openviduUrl) {
         this.openVidu = new OpenVidu(openviduUrl, secret);
         this.usersManager = UsersManager.getInstance();
@@ -40,8 +61,7 @@ public class SessionController {
     public ResponseEntity<String> joinSession(@RequestBody String username, Model model, HttpSession httpSession) {
 
         System.out.println("Getting sessionId and token | {sessionName}={" + ROOM_SESSION_NAME + "}");
-        this.addUserIfMissing(username);
-        String serverData = "{\"serverData\": \"" + username + "\"}";
+        String serverData = "{\"serverData\": \"" + httpSession.getAttribute("loggedUser") + "\"}";
         ConnectionProperties connectionProperties = new ConnectionProperties.Builder().type(ConnectionType.WEBRTC)
                 .role(OpenViduRole.PUBLISHER).data(serverData).build();
         String token;
@@ -62,6 +82,7 @@ public class SessionController {
 
         System.out.println("Removing user | sessioName=" + ROOM_SESSION_NAME + ", token=" + token);
         // To Be Implemented
+        // use userLeave
     }
 
     @MessageMapping("/pos")
@@ -72,6 +93,34 @@ public class SessionController {
         System.out.println(payload[0] + " moves to (" + payload[1] + "," + payload[2] + ")");
         user.setPos(Integer.parseInt(payload[1]), Integer.parseInt(payload[2]));
         return message;
+    }
+
+    @MessageMapping("/userJoin")
+    @SendTo("/topic/userCurrList")
+    public String userJoin(@Payload String message) throws Exception {
+        String[] payload = message.split("\t");
+        this.addUserIfMissing(payload[0]);
+        this.usersManager.setSessionIDToUser(payload[1], payload[0]);
+        User u = this.usersManager.getUser(payload[0]);
+        u.setSessionID(payload[1]);
+        String response = "";
+        List<User> users = this.usersManager.getUserList();
+        for(User user: users) {
+            response += user.toString() + "\n";
+        }
+        System.out.println("Connected: "+payload[0]);
+        return response;
+    }
+
+    public void userLeave(String username){
+        this.usersManager.removeUser(username);
+//        String response = "";
+//        List<User> users = this.usersManager.getUserList();
+//        for(User user: users) {
+//            response += user.toString() + "\n";
+//        }
+        System.out.println("LEAVE");
+        this.template.convertAndSend("/topic/userCurrList", "LEAVE"+"\t"+username);
     }
 
 
