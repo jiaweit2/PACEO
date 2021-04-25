@@ -2,6 +2,8 @@ import * as THREE from "three";
 
 import { OBJLoader } from "./OBJLoader.js";
 import headObj from "./basic_head.obj";
+import grass from "./textures/grass.jpg";
+import sky from "./textures/sky.jpg";
 import { startUserVideo } from "../openVidu";
 
 let container;
@@ -50,6 +52,7 @@ function loadObject(shouldLoadModel) {
   }
 
   function onError() {}
+
   manager = new THREE.LoadingManager(loadModel);
   manager.onProgress = function (item, loaded, total) {
     console.log(item, loaded, total);
@@ -57,8 +60,6 @@ function loadObject(shouldLoadModel) {
 
   // texture
   textureLoader = new THREE.TextureLoader(manager);
-  //const texture = textureLoader.load( 'linkedin.jpg' );
-  //
 
   loader = new OBJLoader(manager);
   loader.load(
@@ -126,19 +127,19 @@ function render() {
     // W key
     camera.position.x -= Math.sin(camera.rotation.y) * player.speed;
     camera.position.z -= -Math.cos(camera.rotation.y) * player.speed;
-    cubeFace.position.x -= Math.sin(camera.rotation.y) * player.speed;
+    /*cubeFace.position.x -= Math.sin(camera.rotation.y) * player.speed;
     cubeFace.position.z -= -Math.cos(camera.rotation.y) * player.speed;
     object.position.x -= Math.sin(camera.rotation.y) * player.speed;
-    object.position.z -= -Math.cos(camera.rotation.y) * player.speed;
+    object.position.z -= -Math.cos(camera.rotation.y) * player.speed;*/
   }
   if (keyboard[83]) {
     // S key
     camera.position.x += Math.sin(camera.rotation.y) * player.speed;
     camera.position.z += -Math.cos(camera.rotation.y) * player.speed;
-    cubeFace.position.x += Math.sin(camera.rotation.y) * player.speed;
+    /*cubeFace.position.x += Math.sin(camera.rotation.y) * player.speed;
     cubeFace.position.z += -Math.cos(camera.rotation.y) * player.speed;
     object.position.x += Math.sin(camera.rotation.y) * player.speed;
-    object.position.z += -Math.cos(camera.rotation.y) * player.speed;
+    object.position.z += -Math.cos(camera.rotation.y) * player.speed;*/
   }
   if (keyboard[65]) {
     // A key
@@ -147,10 +148,10 @@ function render() {
       Math.sin(camera.rotation.y + Math.PI / 2) * player.speed;
     camera.position.z +=
       -Math.cos(camera.rotation.y + Math.PI / 2) * player.speed;
-    cubeFace.position.x += Math.sin(camera.rotation.y + Math.PI/2) * player.speed;
+    /*cubeFace.position.x += Math.sin(camera.rotation.y + Math.PI/2) * player.speed;
     cubeFace.position.z += -Math.cos(camera.rotation.y + Math.PI/2) * player.speed;
     object.position.x += Math.sin(camera.rotation.y + Math.PI/2) * player.speed;
-    object.position.z += -Math.cos(camera.rotation.y + Math.PI/2) * player.speed;
+    object.position.z += -Math.cos(camera.rotation.y + Math.PI/2) * player.speed;*/
   }
   if (keyboard[68]) {
     // D key
@@ -158,24 +159,24 @@ function render() {
       Math.sin(camera.rotation.y - Math.PI / 2) * player.speed;
     camera.position.z +=
       -Math.cos(camera.rotation.y - Math.PI / 2) * player.speed;
-    cubeFace.position.x += Math.sin(camera.rotation.y - Math.PI/2) * player.speed;
+    /*cubeFace.position.x += Math.sin(camera.rotation.y - Math.PI/2) * player.speed;
     cubeFace.position.z += -Math.cos(camera.rotation.y - Math.PI/2) * player.speed;
     object.position.x += Math.sin(camera.rotation.y - Math.PI/2) * player.speed;
-    object.position.z += -Math.cos(camera.rotation.y - Math.PI/2) * player.speed;
+    object.position.z += -Math.cos(camera.rotation.y - Math.PI/2) * player.speed;*/
   }
 
   // Keyboard turn inputs
   if (keyboard[37]) {
     // left arrow key
     camera.rotation.y -= player.turnSpeed;
-    cubeFace.rotation.y += player.turnSpeed;
-    object.rotation.y += player.turnSpeed;
+    /*cubeFace.rotation.y += player.turnSpeed;
+    object.rotation.y += player.turnSpeed;*/
   }
   if (keyboard[39]) {
     // right arrow key
     camera.rotation.y += player.turnSpeed;
-    cubeFace.rotation.y -= player.turnSpeed;
-    object.rotation.y -= player.turnSpeed;
+    /*cubeFace.rotation.y -= player.turnSpeed;
+    object.rotation.y -= player.turnSpeed;*/
   }
 
   texture.needsUpdate = true;
@@ -183,11 +184,11 @@ function render() {
 }
 
 function backgroundScene() {
-  var floorTexture = textureLoader.load('textures/grass.jpg');
+  var floorTexture = textureLoader.load(grass);
   floorTexture.wrapS = THREE.RepeatWrapping;
   floorTexture.wrapT = THREE.RepeatWrapping;
   floorTexture.repeat.set( 100, 100 );
-  var skyTexture = textureLoader.load('textures/sky.jpg');
+  var skyTexture = textureLoader.load(sky);
   skyTexture.wrapS = THREE.RepeatWrapping;
   skyTexture.wrapT = THREE.RepeatWrapping;
   skyTexture.repeat.set( 1, 1 );
@@ -238,15 +239,15 @@ function loadModel(xOffset = 0) {
     //if ( child.isMesh ) child.material.map = texture; // video texture
   });
   object.position.x = xOffset;
-  object.rotation.y = Math.PI;
-  object.scale.set(0.075, 0.075, 0.075);
+  //object.rotation.y = Math.PI;
+  object.scale.set(0.1, 0.1, 0.1);
   scene.add(object);
 
   createOriginalCube(texture, xOffset);
 }
 
 function createOriginalCube(texture, xOffset = 0) {
-  var cubeSize = 3;
+  var cubeSize = 2.2;
   var geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
   var material = new THREE.MeshLambertMaterial({
     map: texture,
@@ -257,16 +258,12 @@ function createOriginalCube(texture, xOffset = 0) {
   materialArray.push(new THREE.MeshBasicMaterial({ color: 0xffffff }));
   materialArray.push(new THREE.MeshBasicMaterial({ color: 0xffffff }));
   materialArray.push(new THREE.MeshBasicMaterial({ color: 0xffffff }));
-  materialArray.push(new THREE.MeshBasicMaterial({ color: 0xffffff }));
   materialArray.push(material);
+  materialArray.push(new THREE.MeshBasicMaterial({ color: 0xffffff }));
   var materials = new THREE.MeshFaceMaterial(materialArray);
-  var cubeFace = new THREE.Mesh(geometry, materials);
-  cubeFace.position.y += cubeSize / 2;
+  cubeFace = new THREE.Mesh(geometry, materials);
+  cubeFace.position.y += cubeSize;
   cubeFace.position.x = xOffset;
-  var cubeOffset = 0.35;
-  cubeFace.position.z -= cubeOffset;
-  cubeFace.scale.set(cubeOffset, cubeOffset, cubeOffset);
-  //cubeFace.position.x = 10;
   scene.add(cubeFace);
 }
 
