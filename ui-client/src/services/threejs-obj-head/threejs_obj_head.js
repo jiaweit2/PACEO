@@ -13,7 +13,8 @@ let player = { height: 1.8, speed: 0.2, turnSpeed: Math.PI * 0.02 };
 let windowHalfX = window.innerWidth / 2;
 let windowHalfY = window.innerHeight / 2;
 
-let object;
+let object, cubeFace;
+let manager, textureLoader, loader;
 
 //init();
 //animate();
@@ -49,17 +50,17 @@ function loadObject(shouldLoadModel) {
   }
 
   function onError() {}
-  const manager = new THREE.LoadingManager(loadModel);
+  manager = new THREE.LoadingManager(loadModel);
   manager.onProgress = function (item, loaded, total) {
     console.log(item, loaded, total);
   };
 
   // texture
-  const textureLoader = new THREE.TextureLoader(manager);
+  textureLoader = new THREE.TextureLoader(manager);
   //const texture = textureLoader.load( 'linkedin.jpg' );
   //
 
-  const loader = new OBJLoader(manager);
+  loader = new OBJLoader(manager);
   loader.load(
     headObj,
     function (obj) {
@@ -92,15 +93,9 @@ function init() {
   camera.add(pointLight);
   scene.add(camera);
 
-  var floorSize = 100;
-  meshFloor = new THREE.Mesh(
-    new THREE.PlaneGeometry(floorSize, floorSize, floorSize, floorSize),
-    new THREE.MeshBasicMaterial({ color: 0x1a7026 })
-  );
-  meshFloor.rotation.x -= Math.PI / 2; // Rotate the floor 90 degrees
-  scene.add(meshFloor);
+  backgroundScene();
 
-  camera.position.set(0, player.height, -5);
+  camera.position.set(0, player.height, -5); // set z to -0.1 to match face //
   camera.lookAt(new THREE.Vector3(0, player.height, 0));
 
   renderer = new THREE.WebGLRenderer();
@@ -121,8 +116,6 @@ function onWindowResize() {
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-//
-
 function animate() {
   requestAnimationFrame(animate);
   render();
@@ -133,11 +126,19 @@ function render() {
     // W key
     camera.position.x -= Math.sin(camera.rotation.y) * player.speed;
     camera.position.z -= -Math.cos(camera.rotation.y) * player.speed;
+    cubeFace.position.x -= Math.sin(camera.rotation.y) * player.speed;
+    cubeFace.position.z -= -Math.cos(camera.rotation.y) * player.speed;
+    object.position.x -= Math.sin(camera.rotation.y) * player.speed;
+    object.position.z -= -Math.cos(camera.rotation.y) * player.speed;
   }
   if (keyboard[83]) {
     // S key
     camera.position.x += Math.sin(camera.rotation.y) * player.speed;
     camera.position.z += -Math.cos(camera.rotation.y) * player.speed;
+    cubeFace.position.x += Math.sin(camera.rotation.y) * player.speed;
+    cubeFace.position.z += -Math.cos(camera.rotation.y) * player.speed;
+    object.position.x += Math.sin(camera.rotation.y) * player.speed;
+    object.position.z += -Math.cos(camera.rotation.y) * player.speed;
   }
   if (keyboard[65]) {
     // A key
@@ -146,6 +147,10 @@ function render() {
       Math.sin(camera.rotation.y + Math.PI / 2) * player.speed;
     camera.position.z +=
       -Math.cos(camera.rotation.y + Math.PI / 2) * player.speed;
+    cubeFace.position.x += Math.sin(camera.rotation.y + Math.PI/2) * player.speed;
+    cubeFace.position.z += -Math.cos(camera.rotation.y + Math.PI/2) * player.speed;
+    object.position.x += Math.sin(camera.rotation.y + Math.PI/2) * player.speed;
+    object.position.z += -Math.cos(camera.rotation.y + Math.PI/2) * player.speed;
   }
   if (keyboard[68]) {
     // D key
@@ -153,20 +158,79 @@ function render() {
       Math.sin(camera.rotation.y - Math.PI / 2) * player.speed;
     camera.position.z +=
       -Math.cos(camera.rotation.y - Math.PI / 2) * player.speed;
+    cubeFace.position.x += Math.sin(camera.rotation.y - Math.PI/2) * player.speed;
+    cubeFace.position.z += -Math.cos(camera.rotation.y - Math.PI/2) * player.speed;
+    object.position.x += Math.sin(camera.rotation.y - Math.PI/2) * player.speed;
+    object.position.z += -Math.cos(camera.rotation.y - Math.PI/2) * player.speed;
   }
 
   // Keyboard turn inputs
   if (keyboard[37]) {
     // left arrow key
     camera.rotation.y -= player.turnSpeed;
+    cubeFace.rotation.y += player.turnSpeed;
+    object.rotation.y += player.turnSpeed;
   }
   if (keyboard[39]) {
     // right arrow key
     camera.rotation.y += player.turnSpeed;
+    cubeFace.rotation.y -= player.turnSpeed;
+    object.rotation.y -= player.turnSpeed;
   }
 
   texture.needsUpdate = true;
   renderer.render(scene, camera);
+}
+
+function backgroundScene() {
+  var floorTexture = textureLoader.load('textures/grass.jpg');
+  floorTexture.wrapS = THREE.RepeatWrapping;
+  floorTexture.wrapT = THREE.RepeatWrapping;
+  floorTexture.repeat.set( 100, 100 );
+  var skyTexture = textureLoader.load('textures/sky.jpg');
+  skyTexture.wrapS = THREE.RepeatWrapping;
+  skyTexture.wrapT = THREE.RepeatWrapping;
+  skyTexture.repeat.set( 1, 1 );
+
+  var floorSize = 500;
+  meshFloor = new THREE.Mesh(
+      new THREE.PlaneGeometry(floorSize, floorSize, floorSize, floorSize),
+      new THREE.MeshLambertMaterial( {map: floorTexture} )
+  );
+  meshFloor.rotation.x -= Math.PI / 2; // Rotate the floor 90 degrees
+  scene.add(meshFloor);
+
+  var frontWall = new THREE.Mesh( // North Wall
+      new THREE.PlaneGeometry(floorSize, floorSize, floorSize, floorSize),
+      new THREE.MeshLambertMaterial( {map: skyTexture})
+  );
+  frontWall.position.y += floorSize / 2; // Put Wall on Top of Floor
+  frontWall.position.z += floorSize / 2; // Put Wall in Front of Start
+  frontWall.rotation.y += Math.PI;
+  scene.add(frontWall);
+  var backWall = new THREE.Mesh( // South Wall
+      new THREE.PlaneGeometry(floorSize, floorSize, floorSize, floorSize),
+      new THREE.MeshLambertMaterial( {map: skyTexture})
+  );
+  backWall.position.y += floorSize / 2; // Put Wall on Top of Floor
+  backWall.position.z -= floorSize / 2; // Put Wall Behind Start
+  scene.add(backWall);
+  var leftWall = new THREE.Mesh( // North Wall
+      new THREE.PlaneGeometry(floorSize, floorSize, floorSize, floorSize),
+      new THREE.MeshLambertMaterial( {map: skyTexture})
+  );
+  leftWall.position.y += floorSize / 2; // Put Wall on Top of Floor
+  leftWall.position.x += floorSize / 2; // Put Wall Left of Start
+  leftWall.rotation.y -= Math.PI / 2;
+  scene.add(leftWall);
+  var rightWall = new THREE.Mesh( // North Wall
+      new THREE.PlaneGeometry(floorSize, floorSize, floorSize, floorSize),
+      new THREE.MeshLambertMaterial( {map: skyTexture})
+  );
+  rightWall.position.y += floorSize / 2; // Put Wall on Top of Floor
+  rightWall.position.x -= floorSize / 2; // Put Wall Right of Start
+  rightWall.rotation.y += Math.PI / 2;
+  scene.add(rightWall);
 }
 
 function loadModel(xOffset = 0) {
