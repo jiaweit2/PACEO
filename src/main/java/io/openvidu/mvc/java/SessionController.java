@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 @Controller
 public class SessionController {
@@ -90,7 +91,7 @@ public class SessionController {
     public String setPos(@Payload String message) {
         String[] payload = message.split("\t");
         User user = this.usersManager.getUser(payload[0]);
-        System.out.println(payload[0] + " moves to (" + payload[1] + "," + payload[2] + ")");
+//        System.out.println(payload[0] + " moves to (" + payload[1] + "," + payload[2] + ")");
         user.setPos(Integer.parseInt(payload[1]), Integer.parseInt(payload[2]));
         return message;
     }
