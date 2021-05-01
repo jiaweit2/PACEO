@@ -1,9 +1,3 @@
-.video {
-  height: 400px;
-  width: 400px;
-  position: relative;
-}
-
 .individual-user-face {
   position: relative;
 }
@@ -16,7 +10,7 @@
   top: 50%;
   transform: translate(-50%, -50%);
 }
-.game{
+.game {
   width: 100%;
   height: 100%;
 }
