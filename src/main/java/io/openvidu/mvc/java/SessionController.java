@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.http.HttpSession;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import commons.User;
 import commons.UsersManager;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,29 +34,35 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 public class SessionController {
 
     private final String ROOM_SESSION_NAME = "ROOM";
+    private final int POSITION_INCREMENTER = 10;
     private final OpenVidu openVidu;
     private String activeSessionId;
+    private ObjectMapper objectMapper;
+    private int spawnX;
+    private int spawnY;
 
     private UsersManager usersManager;
 
     @Autowired
     private SimpMessagingTemplate template;
 
-    @EventListener
-    public void onSocketDisconnected(SessionDisconnectEvent event) {
-        StompHeaderAccessor sha = StompHeaderAccessor.wrap(event.getMessage());
-        String sessionID = sha.getSessionId();
-        User user = this.usersManager.getUserBySessionID(sessionID);
-        if (user != null){
-            System.out.println("[Disonnected] " + user.getName());
-            userLeave(user.getName());
-        }
-
-    }
-
     public SessionController(@Value("${openvidu.secret}") String secret, @Value("${openvidu.url}") String openviduUrl) {
         this.openVidu = new OpenVidu(openviduUrl, secret);
         this.usersManager = UsersManager.getInstance();
+        this.objectMapper = new ObjectMapper();
+        this.spawnX = 0;
+        this.spawnY = 0;
+    }
+
+    @EventListener
+    public void onSocketDisconnected(SessionDisconnectEvent event) throws Exception {
+        StompHeaderAccessor sha = StompHeaderAccessor.wrap(event.getMessage());
+        String sessionID = sha.getSessionId();
+        User user = this.usersManager.getUserBySessionID(sessionID);
+        if (user != null) {
+            System.out.println("[Disonnected] " + user.getName());
+            userLeave(user.getName());
+        }
     }
 
     @RequestMapping(value = "/session", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -100,20 +107,21 @@ public class SessionController {
     @SendTo("/topic/userCurrList")
     public String userJoin(@Payload String message) throws Exception {
         String[] payload = message.split("\t");
-        this.addUserIfMissing(payload[0]);
-        this.usersManager.setSessionIDToUser(payload[1], payload[0]);
-        User u = this.usersManager.getUser(payload[0]);
+        String username = payload[0];
+        String sessionId = payload[1];
+        this.addUserIfMissing(username);
+        this.usersManager.setSessionIDToUser(sessionId, username);
+        this.usersManager.setUserPosition(username, this.spawnX, this.spawnY);
+        User u = this.usersManager.getUser(username);
         u.setSessionID(payload[1]);
-        String response = "";
-        List<User> users = this.usersManager.getUserList();
-        for(User user: users) {
-            response += user.toString() + "\n";
-        }
-        System.out.println("Connected: "+payload[0]);
+        String response = this.objectMapper.writeValueAsString(this.usersManager.getUserList());
+        System.out.println("Connected: " + username);
+        this.spawnY += this.POSITION_INCREMENTER;
+        this.spawnX += this.POSITION_INCREMENTER;
         return response;
     }
 
-    public void userLeave(String username){
+    public void userLeave(String username) throws Exception {
         this.usersManager.removeUser(username);
 //        String response = "";
 //        List<User> users = this.usersManager.getUserList();
@@ -121,7 +129,8 @@ public class SessionController {
 //            response += user.toString() + "\n";
 //        }
         System.out.println("LEAVE");
-        this.template.convertAndSend("/topic/userCurrList", "LEAVE"+"\t"+username);
+        String serializedUserList = objectMapper.writeValueAsString(this.usersManager.getUserList());
+        this.template.convertAndSend("/topic/userCurrList", this.usersManager.getUserList());
     }
 
 
