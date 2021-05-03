@@ -21,8 +21,6 @@ const App = () => {
       console.log(`${username} connected`);
       const sessionID = stompSocket._transport.url.split("/").pop();
 
-      stompClient.send("/app/userJoin", {}, username + "\t" + sessionID);
-
       stompClient.subscribe("/topic/userCurrList", (message) => {
         const updatedUsersFromServer = JSON.parse(message.body);
         const updatedUsers = JSON.parse(JSON.stringify(users));
@@ -55,6 +53,7 @@ const App = () => {
         setUsers(updatedUsers);
       });
 
+      stompClient.send("/app/userJoin", {}, username + "\t" + sessionID);
       setHasConnected(true);
     });
   };
