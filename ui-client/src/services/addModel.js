@@ -1,7 +1,25 @@
 import * as THREE from "three";
+import {
+  addObjectToScene,
+  getGameSceneProperties,
+  setCameraPosition,
+} from "./backgroundScene";
 const cubeSize = 2.2;
 
-export function createFaceCube(videoElement = null) {
+export const addNewUserFaceCube = (username, userInformation) => {
+  const joiningUserCube = createFaceCube(
+    username,
+    userInformation.initialX,
+    userInformation.initialY
+  );
+  addObjectToScene(joiningUserCube);
+};
+
+export function createFaceCube(
+  videoElement = null,
+  initialX = 0,
+  initialY = 0
+) {
   if (!videoElement) {
     return;
   }
@@ -22,22 +40,11 @@ export function createFaceCube(videoElement = null) {
   var materials = new THREE.MeshFaceMaterial(materialArray);
   var cubeFace = new THREE.Mesh(geometry, materials);
   var cubeOffset = 1;
-  cubeFace.position.z -= cubeOffset;
+  console.log(`Adding new cube at position X ${initialX} Y ${initialY}`);
+  cubeFace.position.x = initialX;
+  cubeFace.position.y += cubeOffset;
+  cubeFace.position.z = initialY;
   cubeFace.scale.set(cubeOffset, cubeOffset, cubeOffset);
+  setCameraPosition(cubeFace.position.x, cubeFace.position.z - 10);
   return cubeFace;
-
-  /*cubeFace = new THREE.Mesh(geometry, materials);
-    cubeFace.position.y += cubeSize;
-    cubeFace.position.x = xOffset;
-    scene.add(cubeFace);*/
 }
-
-/*
-function animate() {
-    requestAnimationFrame(animate);
-    render();
-}
-
-function render() {
-    renderer.render(scene, camera);
-}*/

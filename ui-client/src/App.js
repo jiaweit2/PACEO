@@ -1,7 +1,5 @@
-import { Stomp } from "@stomp/stompjs";
 import { useState, useEffect } from "react";
 import { Spinner } from "react-bootstrap";
-import SockJS from "sockjs-client";
 import "./App.css";
 import { Game } from "./components/Game/Game";
 import { LoginForm } from "./components/LoginForm";

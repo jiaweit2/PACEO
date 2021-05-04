@@ -8,12 +8,17 @@ const openVidu = new OpenVidu();
 
 const session = openVidu.initSession();
 
-export const connectToSession = async (token, username, options = {}) => {
-  session.on("streamCreated", (event) => {
+export const connectToSession = async (token, username, onNewUserJoined) => {
+  session.on("streamCreated", async (event) => {
     const subscriber = session.subscribe(event.stream, undefined);
-    // streamFaceOnto(subscriber, true);
+    const joiningUserInformation = JSON.parse(event.stream.connection.data);
+    const { username: joiningUser } = joiningUserInformation;
+    const joiningUserVideoElement = createUserVideoElement(joiningUser);
+    subscriber.addVideoElement(joiningUserVideoElement);
+    onNewUserJoined &&
+      onNewUserJoined(joiningUserVideoElement, joiningUserInformation);
   });
-  await session.connect(token, { clientData: username });
+  await session.connect(token);
   const videoElement = createUserVideoElement(username);
   await startUserVideo(videoElement);
   return videoElement;

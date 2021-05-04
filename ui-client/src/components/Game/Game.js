@@ -4,11 +4,13 @@ import Navbar from "react-bootstrap/Navbar";
 import Nav from "react-bootstrap/Nav";
 
 import "./Game.css";
-import { getStompClient, stompClient } from "../../services/stompClient";
-import { initScene } from "../../services/backgroundScene";
-import { createFaceCube } from "../../services/addModel";
+import {
+  initScene,
+  getGameSceneProperties,
+  addObjectToScene,
+} from "../../services/backgroundScene";
+import { createFaceCube, addNewUserFaceCube } from "../../services/addModel";
 
-let scene, camera;
 let keyboard = {};
 
 export const Game = ({ username, token, onLeave }) => {
@@ -49,9 +51,14 @@ export const Game = ({ username, token, onLeave }) => {
     }
     window.addEventListener("keydown", handleKey);
     const setupGameScene = async () => {
-      let videoElement = await connectToSession(token, username);
-      [scene, camera] = initScene(username);
-      scene.add(createFaceCube(videoElement));
+      initScene(username);
+      let videoElement = await connectToSession(
+        token,
+        username,
+        addNewUserFaceCube
+      );
+      const userFaceCube = createFaceCube(videoElement);
+      addObjectToScene(userFaceCube);
     };
     setupGameScene();
     return function cleanup() {

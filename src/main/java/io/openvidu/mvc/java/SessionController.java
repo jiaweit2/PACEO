@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.http.HttpSession;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import commons.User;
 import commons.UsersManager;
@@ -34,7 +35,7 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 public class SessionController {
 
     private final String ROOM_SESSION_NAME = "ROOM";
-    private final int POSITION_INCREMENTER = 10;
+    private final int POSITION_INCREMENTER = 5;
     private final OpenVidu openVidu;
     private String activeSessionId;
     private ObjectMapper objectMapper;
@@ -66,10 +67,15 @@ public class SessionController {
     }
 
     @RequestMapping(value = "/session", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> joinSession(@RequestBody String username, Model model, HttpSession httpSession) {
+    public ResponseEntity<String> joinSession(@RequestBody String serializedRequestBody, Model model, HttpSession httpSession) throws Exception {
 
         System.out.println("Getting sessionId and token | {sessionName}={" + ROOM_SESSION_NAME + "}");
-        String serverData = "{\"serverData\": \"" + httpSession.getAttribute("loggedUser") + "\"}";
+        JsonNode body = objectMapper.readTree(serializedRequestBody);
+        String username = body.get("username").textValue();
+        OpenViduServerData openViduServerData = new OpenViduServerData(username, this.spawnX, this.spawnY);
+        this.spawnX += this.POSITION_INCREMENTER;
+        this.spawnY += this.POSITION_INCREMENTER;
+        String serverData = objectMapper.writeValueAsString(openViduServerData);
         ConnectionProperties connectionProperties = new ConnectionProperties.Builder().type(ConnectionType.WEBRTC)
                 .role(OpenViduRole.PUBLISHER).data(serverData).build();
         String token;

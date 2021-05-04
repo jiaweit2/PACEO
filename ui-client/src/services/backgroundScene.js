@@ -8,8 +8,7 @@ let keyboard = {};
 let windowHalfX = window.innerWidth / 2;
 let windowHalfY = window.innerHeight / 2;
 
-let camera, renderer, userName;
-let scene = new THREE.Scene();
+let scene, camera, renderer, userName;
 let player = { height: 1.8, speed: 0.2, turnSpeed: Math.PI * 0.02 };
 
 const stompClient = getStompClient();
@@ -17,6 +16,16 @@ const stompClient = getStompClient();
 let manager = new THREE.LoadingManager();
 let textureLoader = new THREE.TextureLoader(manager);
 let loader = new OBJLoader(manager);
+
+export const getGameSceneProperties = () => {
+  return [scene, camera, renderer];
+};
+
+export const addObjectToScene = (object) => {
+  if (scene) {
+    scene.add(object);
+  }
+};
 
 export function initScene(username, users) {
   // users = cubes
@@ -54,8 +63,6 @@ export function initScene(username, users) {
   //    console.log("USERS: ", users, user, users[user]);
   //    scene.add(users[user])
   //}
-
-  return [scene, camera, renderer];
 }
 
 function backgroundScene() {
