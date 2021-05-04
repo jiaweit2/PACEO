@@ -47,11 +47,13 @@ export const Game = ({ username, token, onLeave }) => {
       console.warn("Username is EMPTY");
       return;
     }
-    let videoTexture = connectToSession(token, username);
-    [scene, camera] = initScene(username);
-    scene.add(createFaceCube(videoTexture));
     window.addEventListener("keydown", handleKey);
-
+    const setupGameScene = async () => {
+      let videoElement = await connectToSession(token, username);
+      [scene, camera] = initScene(username);
+      scene.add(createFaceCube(videoElement));
+    };
+    setupGameScene();
     return function cleanup() {
       window.removeEventListener("keydown", handleKey);
     };

@@ -2,7 +2,7 @@
   "name": "ui-client",
   "version": "0.1.0",
   "private": true,
-  "proxy": "https://paceo.herokuapp.com/",
+  "proxy": "http://localhost:5000/",
   "dependencies": {
     "@material-ui/core": "^4.11.3",
     "@stomp/stompjs": "^6.1.0",

@@ -27,33 +27,18 @@ let loader = new OBJLoader(manager);
 //init();
 //animate();
 
-export function streamFaceOnto(target, shouldLoadModel, isInitialLoad) {
-  const videoElem = document.createElement("video");
-  videoElem.autoplay = true;
-  document.body.appendChild(videoElem);
-  videoElem.classList.add("user-video");
-  target.addVideoElement(videoElem);
-  videoElem.onloadedmetadata = function () {
-    texture = new THREE.VideoTexture(videoElem);
-    /*
-    if (shouldLoadModel && object) {
-      loadModel(10);
-    }
-    if (!object) {
-      loadObject(shouldLoadModel);
-    }
-    */
-    if (isInitialLoad) {
-      init();
-      animate();
-    }
-    if (shouldLoadModel) {
-      //let max = 5, min = 1;
-      //let randomInt = Math.floor(Math.random() * (Math.floor(max) - Math.ceil(min) + 1)) + Math.ceil(min)
-
-      createOriginalCube(texture);
-    }
-  };
+export function streamFaceOnto(
+  target,
+  shouldLoadModel,
+  isInitialLoad,
+  videoElement
+) {
+  target.addVideoElement(videoElement);
+  return new Promise((resolve, reject) => {
+    videoElement.onloadedmetadata = function () {
+      resolve(videoElement);
+    };
+  });
 }
 
 /*
@@ -156,8 +141,10 @@ function render() {
       Math.sin(camera.rotation.y + Math.PI / 2) * player.speed;
     camera.position.z +=
       -Math.cos(camera.rotation.y + Math.PI / 2) * player.speed;
-    cubeFace.position.x += Math.sin(camera.rotation.y + Math.PI/2) * player.speed;
-    cubeFace.position.z += -Math.cos(camera.rotation.y + Math.PI/2) * player.speed;
+    cubeFace.position.x +=
+      Math.sin(camera.rotation.y + Math.PI / 2) * player.speed;
+    cubeFace.position.z +=
+      -Math.cos(camera.rotation.y + Math.PI / 2) * player.speed;
     /*object.position.x += Math.sin(camera.rotation.y + Math.PI/2) * player.speed;
     object.position.z += -Math.cos(camera.rotation.y + Math.PI/2) * player.speed;*/
   }
@@ -167,8 +154,10 @@ function render() {
       Math.sin(camera.rotation.y - Math.PI / 2) * player.speed;
     camera.position.z +=
       -Math.cos(camera.rotation.y - Math.PI / 2) * player.speed;
-    cubeFace.position.x += Math.sin(camera.rotation.y - Math.PI/2) * player.speed;
-    cubeFace.position.z += -Math.cos(camera.rotation.y - Math.PI/2) * player.speed;
+    cubeFace.position.x +=
+      Math.sin(camera.rotation.y - Math.PI / 2) * player.speed;
+    cubeFace.position.z +=
+      -Math.cos(camera.rotation.y - Math.PI / 2) * player.speed;
     /*object.position.x += Math.sin(camera.rotation.y - Math.PI/2) * player.speed;
     object.position.z += -Math.cos(camera.rotation.y - Math.PI/2) * player.speed;*/
   }
@@ -195,46 +184,46 @@ function backgroundScene() {
   var floorTexture = textureLoader.load(grass);
   floorTexture.wrapS = THREE.RepeatWrapping;
   floorTexture.wrapT = THREE.RepeatWrapping;
-  floorTexture.repeat.set( 100, 100 );
+  floorTexture.repeat.set(100, 100);
   var skyTexture = textureLoader.load(sky);
   skyTexture.wrapS = THREE.RepeatWrapping;
   skyTexture.wrapT = THREE.RepeatWrapping;
-  skyTexture.repeat.set( 1, 1 );
+  skyTexture.repeat.set(1, 1);
 
   var floorSize = 500;
   var meshFloor = new THREE.Mesh(
-      new THREE.PlaneGeometry(floorSize, floorSize, floorSize, floorSize),
-      new THREE.MeshLambertMaterial( {map: floorTexture} )
+    new THREE.PlaneGeometry(floorSize, floorSize, floorSize, floorSize),
+    new THREE.MeshLambertMaterial({ map: floorTexture })
   );
   meshFloor.rotation.x -= Math.PI / 2; // Rotate the floor 90 degrees
   scene.add(meshFloor);
 
   var frontWall = new THREE.Mesh( // North Wall
-      new THREE.PlaneGeometry(floorSize, floorSize, floorSize, floorSize),
-      new THREE.MeshLambertMaterial( {map: skyTexture})
+    new THREE.PlaneGeometry(floorSize, floorSize, floorSize, floorSize),
+    new THREE.MeshLambertMaterial({ map: skyTexture })
   );
   frontWall.position.y += floorSize / 2; // Put Wall on Top of Floor
   frontWall.position.z += floorSize / 2; // Put Wall in Front of Start
   frontWall.rotation.y += Math.PI;
   scene.add(frontWall);
   var backWall = new THREE.Mesh( // South Wall
-      new THREE.PlaneGeometry(floorSize, floorSize, floorSize, floorSize),
-      new THREE.MeshLambertMaterial( {map: skyTexture})
+    new THREE.PlaneGeometry(floorSize, floorSize, floorSize, floorSize),
+    new THREE.MeshLambertMaterial({ map: skyTexture })
   );
   backWall.position.y += floorSize / 2; // Put Wall on Top of Floor
   backWall.position.z -= floorSize / 2; // Put Wall Behind Start
   scene.add(backWall);
   var leftWall = new THREE.Mesh( // North Wall
-      new THREE.PlaneGeometry(floorSize, floorSize, floorSize, floorSize),
-      new THREE.MeshLambertMaterial( {map: skyTexture})
+    new THREE.PlaneGeometry(floorSize, floorSize, floorSize, floorSize),
+    new THREE.MeshLambertMaterial({ map: skyTexture })
   );
   leftWall.position.y += floorSize / 2; // Put Wall on Top of Floor
   leftWall.position.x += floorSize / 2; // Put Wall Left of Start
   leftWall.rotation.y -= Math.PI / 2;
   scene.add(leftWall);
   var rightWall = new THREE.Mesh( // North Wall
-      new THREE.PlaneGeometry(floorSize, floorSize, floorSize, floorSize),
-      new THREE.MeshLambertMaterial( {map: skyTexture})
+    new THREE.PlaneGeometry(floorSize, floorSize, floorSize, floorSize),
+    new THREE.MeshLambertMaterial({ map: skyTexture })
   );
   rightWall.position.y += floorSize / 2; // Put Wall on Top of Floor
   rightWall.position.x -= floorSize / 2; // Put Wall Right of Start
