@@ -4,52 +4,22 @@ import Navbar from "react-bootstrap/Navbar";
 import Nav from "react-bootstrap/Nav";
 
 import "./Game.css";
-import {
-  initScene,
-  getGameSceneProperties,
-  addObjectToScene,
-} from "../../services/backgroundScene";
+import { initScene, addObjectToScene } from "../../services/backgroundScene";
 import { createFaceCube, addNewUserFaceCube } from "../../services/addModel";
 
 let keyboard = {};
 
-export const Game = ({ username, token, onLeave }) => {
-  var x = 0;
-  var y = 0; // actually z
-
-  const handleKey = (e) => {
-    // handled in backgroundScene.js
-    keyboard[e.code] = true;
-    console.log(e.code + " PRESSED by " + username);
-    /*switch (e.code) {
-      case "ArrowLeft":
-        x--;
-        break;
-      case "ArrowUp":
-        y++;
-        break;
-      case "ArrowRight":
-        x++;
-        break;
-      case "ArrowDown":
-        y--;
-        break;
-      default:
-        return;
-    }
-    const stompClient = getStompClient();
-    if (stompClient != null) {
-      stompClient.send("/app/pos", {}, username + "\t" + x + "\t" + y);
-    }*/
-  };
-
+export const Game = ({
+  username,
+  token,
+  onLeave,
+  initialPosition: { initialX, initialY },
+}) => {
   useEffect(() => {
-    // Issue: useEffect() is called twice when started?
     if (username.length === 0) {
       console.warn("Username is EMPTY");
       return;
     }
-    window.addEventListener("keydown", handleKey);
     const setupGameScene = async () => {
       initScene(username);
       let videoElement = await connectToSession(
@@ -57,14 +27,16 @@ export const Game = ({ username, token, onLeave }) => {
         username,
         addNewUserFaceCube
       );
-      const userFaceCube = createFaceCube(videoElement);
+      const userFaceCube = createFaceCube(
+        videoElement,
+        initialX,
+        initialY,
+        true
+      );
       addObjectToScene(userFaceCube);
     };
     setupGameScene();
-    return function cleanup() {
-      window.removeEventListener("keydown", handleKey);
-    };
-  }, []);
+  }, [initialX, initialY]);
 
   return (
     <div className="game">

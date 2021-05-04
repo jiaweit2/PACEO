@@ -11,8 +11,6 @@ let windowHalfY = window.innerHeight / 2;
 let scene, camera, renderer, userName;
 let player = { height: 1.8, speed: 0.2, turnSpeed: Math.PI * 0.02 };
 
-const stompClient = getStompClient();
-
 let manager = new THREE.LoadingManager();
 let textureLoader = new THREE.TextureLoader(manager);
 let loader = new OBJLoader(manager);
@@ -24,6 +22,13 @@ export const getGameSceneProperties = () => {
 export const addObjectToScene = (object) => {
   if (scene) {
     scene.add(object);
+  }
+};
+
+export const setCameraPosition = (x, z) => {
+  if (camera) {
+    camera.position.x = x;
+    camera.position.z = z;
   }
 };
 
@@ -167,11 +172,11 @@ function render() {
 }
 
 function sendPosition() {
+  const stompClient = getStompClient();
   if (stompClient != null) {
     let x = camera.position.x;
     let y = camera.position.z; // y == z (y = up-down)
     let response = userName + "\t" + x + "\t" + y;
-    console.log(response);
     stompClient.send("/app/pos", {}, response);
   }
 }

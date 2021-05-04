@@ -11,6 +11,7 @@ const App = () => {
   const [users, setUsers] = useState({});
   const [hasConnected, setHasConnected] = useState(false);
   const [hasUserList, setHasUserList] = useState(false);
+  const [initialPosition, setInitialPosition] = useState(null);
 
   const connectWebsocket = () => {
     var stompSocket = getStompSocket();
@@ -34,6 +35,7 @@ const App = () => {
       });
 
       stompClient.subscribe("/topic/pos", (message) => {
+        console.log("Position update");
         message = message.body;
         let payload = message.split("\t");
         const updatedUsers = JSON.parse(JSON.stringify(users));
@@ -48,6 +50,7 @@ const App = () => {
             };
           }
         }
+        console.log("New User Positions", updatedUsers);
         setUsers(updatedUsers);
       });
 
@@ -66,9 +69,17 @@ const App = () => {
 
   useEffect(() => username && connectWebsocket(), [username]);
 
-  const handleOnLogin = (sessionToken, name) => {
+  const handleOnLogin = (loginResponse, name) => {
+    const {
+      token: sessionToken,
+      openViduServerData: { initialX, initialY },
+    } = loginResponse;
     setGameToken(sessionToken);
     setUsername(name);
+    setInitialPosition({
+      initialX,
+      initialY,
+    });
   };
 
   const handleOnLeave = () => {
@@ -81,7 +92,13 @@ const App = () => {
   if (!username) {
     content = <LoginForm onLogin={handleOnLogin} onLeave={handleOnLeave} />;
   } else if (hasConnected && hasUserList) {
-    content = <Game token={gameToken} username={username} />;
+    content = (
+      <Game
+        token={gameToken}
+        username={username}
+        initialPosition={initialPosition}
+      />
+    );
   } else if (!hasConnected) {
     content = (
       <div className="app__loading">

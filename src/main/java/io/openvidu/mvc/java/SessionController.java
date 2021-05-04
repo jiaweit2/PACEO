@@ -74,7 +74,6 @@ public class SessionController {
         String username = body.get("username").textValue();
         OpenViduServerData openViduServerData = new OpenViduServerData(username, this.spawnX, this.spawnY);
         this.spawnX += this.POSITION_INCREMENTER;
-        this.spawnY += this.POSITION_INCREMENTER;
         String serverData = objectMapper.writeValueAsString(openViduServerData);
         ConnectionProperties connectionProperties = new ConnectionProperties.Builder().type(ConnectionType.WEBRTC)
                 .role(OpenViduRole.PUBLISHER).data(serverData).build();
@@ -87,7 +86,9 @@ public class SessionController {
             System.out.println("New session " + ROOM_SESSION_NAME);
             token = startNewGameRoom(connectionProperties);
         }
-        return new ResponseEntity<>(token, HttpStatus.ACCEPTED);
+        JoinSessionResponse joinSessionResponse = new JoinSessionResponse(token, openViduServerData);
+        String response = objectMapper.writeValueAsString(joinSessionResponse);
+        return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
     }
 
     @RequestMapping(value = "/leave", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)

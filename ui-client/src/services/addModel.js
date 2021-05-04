@@ -18,7 +18,8 @@ export const addNewUserFaceCube = (username, userInformation) => {
 export function createFaceCube(
   videoElement = null,
   initialX = 0,
-  initialY = 0
+  initialY = 0,
+  shouldSetCameraPosition
 ) {
   if (!videoElement) {
     return;
@@ -45,6 +46,8 @@ export function createFaceCube(
   cubeFace.position.y += cubeOffset;
   cubeFace.position.z = initialY;
   cubeFace.scale.set(cubeOffset, cubeOffset, cubeOffset);
-  setCameraPosition(cubeFace.position.x, cubeFace.position.z - 10);
+  if (shouldSetCameraPosition) {
+    setCameraPosition(cubeFace.position.x, cubeFace.position.z - 10);
+  }
   return cubeFace;
 }
