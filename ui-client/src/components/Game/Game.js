@@ -5,13 +5,21 @@ import Nav from "react-bootstrap/Nav";
 
 import "./Game.css";
 import { getStompClient, stompClient } from "../../services/stompClient";
+import { initScene } from "../../services/backgroundScene";
+import { createFaceCube } from "../../services/addModel";
+
+let scene, camera;
+let keyboard = {};
 
 export const Game = ({ username, token, onLeave }) => {
   var x = 0;
-  var y = 0;
+  var y = 0; // actually z
 
   const handleKey = (e) => {
-    switch (e.code) {
+    // handled in backgroundScene.js
+    keyboard[e.code] = true;
+    console.log(e.code + " PRESSED by " + username);
+    /*switch (e.code) {
       case "ArrowLeft":
         x--;
         break;
@@ -30,16 +38,18 @@ export const Game = ({ username, token, onLeave }) => {
     const stompClient = getStompClient();
     if (stompClient != null) {
       stompClient.send("/app/pos", {}, username + "\t" + x + "\t" + y);
-    }
+    }*/
   };
 
   useEffect(() => {
     // Issue: useEffect() is called twice when started?
-    if (username.length == 0) {
+    if (username.length === 0) {
       console.warn("Username is EMPTY");
       return;
     }
-    connectToSession(token, username);
+    let videoTexture = connectToSession(token, username);
+    [scene, camera] = initScene(username);
+    scene.add(createFaceCube(videoTexture));
     window.addEventListener("keydown", handleKey);
 
     return function cleanup() {

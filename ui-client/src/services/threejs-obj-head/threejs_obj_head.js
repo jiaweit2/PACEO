@@ -8,7 +8,11 @@ import { startUserVideo } from "../openVidu";
 
 let container;
 
-let camera, scene, renderer, texture, meshFloor;
+let camera;
+let scene = new THREE.Scene();
+let renderer = new THREE.WebGLRenderer();
+let texture;
+
 let keyboard = {};
 let player = { height: 1.8, speed: 0.2, turnSpeed: Math.PI * 0.02 };
 
@@ -16,7 +20,9 @@ let windowHalfX = window.innerWidth / 2;
 let windowHalfY = window.innerHeight / 2;
 
 let object, cubeFace;
-let manager, textureLoader, loader;
+let manager = new THREE.LoadingManager();
+let textureLoader = new THREE.TextureLoader(manager);
+let loader = new OBJLoader(manager);
 
 //init();
 //animate();
@@ -29,19 +35,28 @@ export function streamFaceOnto(target, shouldLoadModel, isInitialLoad) {
   target.addVideoElement(videoElem);
   videoElem.onloadedmetadata = function () {
     texture = new THREE.VideoTexture(videoElem);
+    /*
     if (shouldLoadModel && object) {
       loadModel(10);
     }
     if (!object) {
       loadObject(shouldLoadModel);
     }
+    */
     if (isInitialLoad) {
       init();
       animate();
     }
+    if (shouldLoadModel) {
+      //let max = 5, min = 1;
+      //let randomInt = Math.floor(Math.random() * (Math.floor(max) - Math.ceil(min) + 1)) + Math.ceil(min)
+
+      createOriginalCube(texture);
+    }
   };
 }
 
+/*
 function loadObject(shouldLoadModel) {
   // model
   function onProgress(xhr) {
@@ -53,15 +68,11 @@ function loadObject(shouldLoadModel) {
 
   function onError() {}
 
-  manager = new THREE.LoadingManager(loadModel);
   manager.onProgress = function (item, loaded, total) {
     console.log(item, loaded, total);
   };
 
-  // texture
-  textureLoader = new THREE.TextureLoader(manager);
 
-  loader = new OBJLoader(manager);
   loader.load(
     headObj,
     function (obj) {
@@ -76,6 +87,7 @@ function loadObject(shouldLoadModel) {
     onError
   );
 }
+ */
 
 function init() {
   container = document.createElement("div");
@@ -83,9 +95,6 @@ function init() {
   app.appendChild(container);
 
   camera = new THREE.PerspectiveCamera(90, 1280 / 720, 0.1, 1000);
-
-  // scene
-  scene = new THREE.Scene();
 
   const ambientLight = new THREE.AmbientLight(0xcccccc, 0.4);
   scene.add(ambientLight);
@@ -99,7 +108,6 @@ function init() {
   camera.position.set(0, player.height, -5); // set z to -0.1 to match face //
   camera.lookAt(new THREE.Vector3(0, player.height, 0));
 
-  renderer = new THREE.WebGLRenderer();
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
   container.appendChild(renderer.domElement);
@@ -127,18 +135,18 @@ function render() {
     // W key
     camera.position.x -= Math.sin(camera.rotation.y) * player.speed;
     camera.position.z -= -Math.cos(camera.rotation.y) * player.speed;
-    /*cubeFace.position.x -= Math.sin(camera.rotation.y) * player.speed;
+    cubeFace.position.x -= Math.sin(camera.rotation.y) * player.speed;
     cubeFace.position.z -= -Math.cos(camera.rotation.y) * player.speed;
-    object.position.x -= Math.sin(camera.rotation.y) * player.speed;
+    /*object.position.x -= Math.sin(camera.rotation.y) * player.speed;
     object.position.z -= -Math.cos(camera.rotation.y) * player.speed;*/
   }
   if (keyboard[83]) {
     // S key
     camera.position.x += Math.sin(camera.rotation.y) * player.speed;
     camera.position.z += -Math.cos(camera.rotation.y) * player.speed;
-    /*cubeFace.position.x += Math.sin(camera.rotation.y) * player.speed;
+    cubeFace.position.x += Math.sin(camera.rotation.y) * player.speed;
     cubeFace.position.z += -Math.cos(camera.rotation.y) * player.speed;
-    object.position.x += Math.sin(camera.rotation.y) * player.speed;
+    /*object.position.x += Math.sin(camera.rotation.y) * player.speed;
     object.position.z += -Math.cos(camera.rotation.y) * player.speed;*/
   }
   if (keyboard[65]) {
@@ -148,9 +156,9 @@ function render() {
       Math.sin(camera.rotation.y + Math.PI / 2) * player.speed;
     camera.position.z +=
       -Math.cos(camera.rotation.y + Math.PI / 2) * player.speed;
-    /*cubeFace.position.x += Math.sin(camera.rotation.y + Math.PI/2) * player.speed;
+    cubeFace.position.x += Math.sin(camera.rotation.y + Math.PI/2) * player.speed;
     cubeFace.position.z += -Math.cos(camera.rotation.y + Math.PI/2) * player.speed;
-    object.position.x += Math.sin(camera.rotation.y + Math.PI/2) * player.speed;
+    /*object.position.x += Math.sin(camera.rotation.y + Math.PI/2) * player.speed;
     object.position.z += -Math.cos(camera.rotation.y + Math.PI/2) * player.speed;*/
   }
   if (keyboard[68]) {
@@ -159,9 +167,9 @@ function render() {
       Math.sin(camera.rotation.y - Math.PI / 2) * player.speed;
     camera.position.z +=
       -Math.cos(camera.rotation.y - Math.PI / 2) * player.speed;
-    /*cubeFace.position.x += Math.sin(camera.rotation.y - Math.PI/2) * player.speed;
+    cubeFace.position.x += Math.sin(camera.rotation.y - Math.PI/2) * player.speed;
     cubeFace.position.z += -Math.cos(camera.rotation.y - Math.PI/2) * player.speed;
-    object.position.x += Math.sin(camera.rotation.y - Math.PI/2) * player.speed;
+    /*object.position.x += Math.sin(camera.rotation.y - Math.PI/2) * player.speed;
     object.position.z += -Math.cos(camera.rotation.y - Math.PI/2) * player.speed;*/
   }
 
@@ -169,14 +177,14 @@ function render() {
   if (keyboard[37]) {
     // left arrow key
     camera.rotation.y -= player.turnSpeed;
-    /*cubeFace.rotation.y += player.turnSpeed;
-    object.rotation.y += player.turnSpeed;*/
+    cubeFace.rotation.y += player.turnSpeed;
+    //object.rotation.y += player.turnSpeed;
   }
   if (keyboard[39]) {
     // right arrow key
     camera.rotation.y += player.turnSpeed;
-    /*cubeFace.rotation.y -= player.turnSpeed;
-    object.rotation.y -= player.turnSpeed;*/
+    cubeFace.rotation.y -= player.turnSpeed;
+    //object.rotation.y -= player.turnSpeed;
   }
 
   texture.needsUpdate = true;
@@ -194,7 +202,7 @@ function backgroundScene() {
   skyTexture.repeat.set( 1, 1 );
 
   var floorSize = 500;
-  meshFloor = new THREE.Mesh(
+  var meshFloor = new THREE.Mesh(
       new THREE.PlaneGeometry(floorSize, floorSize, floorSize, floorSize),
       new THREE.MeshLambertMaterial( {map: floorTexture} )
   );
@@ -234,6 +242,7 @@ function backgroundScene() {
   scene.add(rightWall);
 }
 
+/*
 function loadModel(xOffset = 0) {
   object.traverse(function (child) {
     //if ( child.isMesh ) child.material.map = texture; // video texture
@@ -245,6 +254,7 @@ function loadModel(xOffset = 0) {
 
   createOriginalCube(texture, xOffset);
 }
+*/
 
 function createOriginalCube(texture, xOffset = 0) {
   var cubeSize = 2.2;
