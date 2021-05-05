@@ -5,7 +5,11 @@ import Nav from "react-bootstrap/Nav";
 
 import "./Game.css";
 import { initScene, addObjectToScene } from "../../services/backgroundScene";
-import { createFaceCube, addNewUserFaceCube } from "../../services/addModel";
+import {
+  createFaceCube,
+  addNewUserFaceCube,
+  setUserCube,
+} from "../../services/addModel";
 
 let keyboard = {};
 
@@ -31,9 +35,11 @@ export const Game = ({
         videoElement,
         initialX,
         initialY,
-        true
+        true,
+        username
       );
       addObjectToScene(userFaceCube);
+      setUserCube(username, userFaceCube);
     };
     setupGameScene();
   }, [initialX, initialY]);

@@ -3,6 +3,7 @@ import { Spinner } from "react-bootstrap";
 import "./App.css";
 import { Game } from "./components/Game/Game";
 import { LoginForm } from "./components/LoginForm";
+import { setUserCubePositions } from "./services/addModel";
 import { getStompClient, getStompSocket } from "./services/stompClient";
 
 const App = () => {
@@ -35,23 +36,10 @@ const App = () => {
       });
 
       stompClient.subscribe("/topic/pos", (message) => {
-        console.log("Position update");
-        message = message.body;
-        let payload = message.split("\t");
-        const updatedUsers = JSON.parse(JSON.stringify(users));
-        if (payload[0] != username) {
-          if (payload[0] in updatedUsers) {
-            updatedUsers[payload[0]].x = payload[1];
-            updatedUsers[payload[0]].y = payload[2];
-          } else {
-            updatedUsers[payload[0]] = {
-              x: payload[1],
-              y: payload[2],
-            };
-          }
-        }
-        console.log("New User Positions", updatedUsers);
-        setUsers(updatedUsers);
+        const newUserPositions = JSON.parse(message.body);
+        setUsers(newUserPositions);
+        console.log("UPDATED POSITIONS", newUserPositions);
+        setUserCubePositions(newUserPositions, username);
       });
 
       stompClient.send("/app/userJoin", {}, username + "\t" + sessionID);

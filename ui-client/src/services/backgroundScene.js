@@ -27,6 +27,7 @@ export const addObjectToScene = (object) => {
 
 export const setCameraPosition = (x, z) => {
   if (camera) {
+    console.log(`Setting camera x ${x} z ${z}`);
     camera.position.x = x;
     camera.position.z = z;
   }
@@ -177,6 +178,7 @@ function sendPosition() {
     let x = camera.position.x;
     let y = camera.position.z; // y == z (y = up-down)
     let response = userName + "\t" + x + "\t" + y;
+    console.log(response);
     stompClient.send("/app/pos", {}, response);
   }
 }

@@ -6,15 +6,15 @@ public class User {
     String sessionID;
     String name;
     OpenViduRole role;
-    int x;
-    int y;
+    double x;
+    double y;
 
-    public User(String name, OpenViduRole role) {
+    public User(String name, OpenViduRole role, double initialX, double initialY) {
         this.name = name;
         this.role = role;
         this.sessionID = "";
-        this.x = 0;
-        this.y = 0;
+        this.x = initialX;
+        this.y = initialY;
     }
 
     public String getName() {
@@ -41,10 +41,13 @@ public class User {
         this.role = role;
     }
 
-    public int[] getPos() {return new int[]{this.x, this.y};}
+    public double[] getPos() {
+        return new double[]{this.x, this.y};
+    }
 
-    public void setPos(int x, int y) {
-        this.x = x; this.y = y;
+    public void setPos(double x, double y) {
+        this.x = x;
+        this.y = y;
     }
 
     public String toString() {

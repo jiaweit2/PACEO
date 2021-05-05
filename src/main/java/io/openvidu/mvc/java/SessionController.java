@@ -1,5 +1,6 @@
 package io.openvidu.mvc.java;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -102,12 +103,11 @@ public class SessionController {
 
     @MessageMapping("/pos")
     @SendTo("/topic/pos")
-    public String setPos(@Payload String message) {
+    public String setPos(@Payload String message) throws Exception {
         String[] payload = message.split("\t");
         User user = this.usersManager.getUser(payload[0]);
-//        System.out.println(payload[0] + " moves to (" + payload[1] + "," + payload[2] + ")");
-        user.setPos(Integer.parseInt(payload[1]), Integer.parseInt(payload[2]));
-        return message;
+        user.setPos(Double.parseDouble(payload[1]), Double.parseDouble(payload[2]));
+        return objectMapper.writeValueAsString(this.usersManager.getUserPositions());
     }
 
     @MessageMapping("/userJoin")
@@ -116,9 +116,8 @@ public class SessionController {
         String[] payload = message.split("\t");
         String username = payload[0];
         String sessionId = payload[1];
-        this.addUserIfMissing(username);
+        this.addUserIfMissing(username, this.spawnX, this.spawnY);
         this.usersManager.setSessionIDToUser(sessionId, username);
-        this.usersManager.setUserPosition(username, this.spawnX, this.spawnY);
         User u = this.usersManager.getUser(username);
         u.setSessionID(payload[1]);
         String response = this.objectMapper.writeValueAsString(this.usersManager.getUserList());
@@ -179,9 +178,9 @@ public class SessionController {
         return null;
     }
 
-    private void addUserIfMissing(String username) {
+    private void addUserIfMissing(String username, double initialX, double initialY) {
         if (!this.usersManager.containsUser(username)) {
-            User user = new User(username, OpenViduRole.PUBLISHER);
+            User user = new User(username, OpenViduRole.PUBLISHER, initialX, initialY);
             this.usersManager.addUser(user);
         }
     }

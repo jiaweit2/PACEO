@@ -1,7 +1,10 @@
 package commons;
 
 
+import io.openvidu.mvc.java.Position;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,6 +25,10 @@ public class UsersManager {
         return INSTANCE;
     }
 
+    public Map<String, User> getUsers() {
+        return this.users;
+    }
+
     public void addUser(User user) {
         this.users.put(user.getName(), user);
     }
@@ -36,6 +43,19 @@ public class UsersManager {
         } else {
             return null;
         }
+    }
+
+    public Map<String, Position> getUserPositions() {
+        Map<String, User> users = this.getUsers();
+        Map<String, Position> userPositions = new HashMap<>();
+        for (String username : users.keySet()) {
+            User u = users.get(username);
+            double posX = u.getPos()[0];
+            double poxY = u.getPos()[1];
+            Position p = new Position(posX, poxY);
+            userPositions.put(username, p);
+        }
+        return userPositions;
     }
 
     public void setSessionIDToUser(String sessionID, String username) {
