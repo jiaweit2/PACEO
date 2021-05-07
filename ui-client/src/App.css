@@ -43,3 +43,7 @@
   width: 1px;
   height: 1px;
 }
+
+.app__loading {
+  padding-top: 100px;
+}
