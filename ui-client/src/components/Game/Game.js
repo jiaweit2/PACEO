@@ -15,6 +15,10 @@ export const Game = ({ username, token, onLeave }) => {
   var users = {};
   var sessionID = "";
 
+  // Experiments
+  var total = 0;
+  var num = 0;
+
   const handleKey = (e) => {
     switch (e.code) {
       case "ArrowLeft":
@@ -33,7 +37,7 @@ export const Game = ({ username, token, onLeave }) => {
         return;
     }
     if (stompClient != null) {
-      stompClient.send("/app/pos", {}, username + "\t" + x + "\t" + y);
+      stompClient.send("/app/pos", {}, username + "\t" + x + "\t" + y + "\t" + Date.now());
     }
   };
 
@@ -79,6 +83,10 @@ export const Game = ({ username, token, onLeave }) => {
               y: payload[2]
             }
           }
+          let diff = Date.now() - parseFloat(payload[3]);
+          total += diff;
+          num += 1;
+          console.log("Msg Latency: " + (diff));
         }
       });
     });
