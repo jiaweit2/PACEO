@@ -1,4 +1,5 @@
-# CS 525 Project
+# PACEO: People Anywhere Connect Each Other
+Our goal is to innovate the way of video chatting. A detailed introduction to PACEO can be found <a href=https://github.com/jiaweit2/PACEO/blob/main/PACEO_%20Innovating%20the%20Video-based%20Virtual%20Gathering%20Experience.pdf>here</a>.
 
 ## Prerequisites
 
